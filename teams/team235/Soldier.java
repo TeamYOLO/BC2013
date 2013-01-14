@@ -17,14 +17,36 @@ public class Soldier {
 			try{
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,1000000,rc.getTeam().opponent());
 				if(enemyRobots.length==0){//no enemies nearby
-					if (Clock.getRoundNum()<200){
-						goToLocation(rallyPoint);
+					if (Clock.getRoundNum()<200)
+					{						
+						MapLocation[] camps = rc.senseAllEncampmentSquares();
+						rallyPoint = findClosestLocation(camps);
 						
-					}else{
+						if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1)
+						{
+							if(rc.isActive())
+							{
+								rc.captureEncampment(RobotType.SUPPLIER);
+							}
+						}
+						else if(rc.senseNearbyGameObjects(Robot.class, rallyPoint, 0, rc.getTeam()).length > 0)
+						{
+							rallyPoint = findClosestEmptyCamp();
+							goToLocation(rallyPoint);
+						}
+						else
+						{
+							goToLocation(rallyPoint);
+						}
+					}
+					else
+					{
 						goToLocation(rc.senseEnemyHQLocation());
 					}
-				}else{//someone spotted
-					MapLocation closestEnemy = findClosest(enemyRobots);
+				}
+				else
+				{//someone spotted
+					MapLocation closestEnemy = findClosestRobot(enemyRobots);
 					smartCountNeighbors(enemyRobots,closestEnemy);
 					goToLocation(closestEnemy);
 				}
@@ -35,7 +57,7 @@ public class Soldier {
 			rc.yield();
 		}
 	}
-	private static MapLocation findClosest(Robot[] enemyRobots) throws GameActionException {
+	private static MapLocation findClosestRobot(Robot[] enemyRobots) throws GameActionException {
 		int closestDist = 1000000;
 		MapLocation closestEnemy=null;
 		for (int i=0;i<enemyRobots.length;i++){
@@ -49,6 +71,41 @@ public class Soldier {
 		}
 		return closestEnemy;
 	}
+	private static MapLocation findClosestLocation(MapLocation[] locArray) throws GameActionException {
+		int closestDist = 1000000;
+		MapLocation me = rc.getLocation();
+		MapLocation closestLocation=null;
+		for (int i=0; i<locArray.length; i++)
+		{
+			MapLocation aLocation = locArray[i];
+			int dist = aLocation.distanceSquaredTo(me);
+			if (dist < closestDist)
+			{
+				closestDist = dist;
+				closestLocation = aLocation;
+			}
+		}
+		return closestLocation;
+	}
+	
+	private static MapLocation findClosestEmptyCamp() throws GameActionException {
+		MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
+		int closestDist = 1000000;
+		MapLocation me = rc.getLocation();
+		MapLocation closestLocation=null;
+		for (int i=0; i<locArray.length; i++)
+		{
+			MapLocation aLocation = locArray[i];
+			int dist = aLocation.distanceSquaredTo(me);
+			if (dist < closestDist && rc.senseNearbyGameObjects(Robot.class, aLocation, 0, rc.getTeam()).length < 1)
+			{
+				closestDist = dist;
+				closestLocation = aLocation;
+			}
+		}
+		return closestLocation;
+	}
+	
 	private static void goToLocation(MapLocation whereToGo) throws GameActionException {
 		int dist = rc.getLocation().distanceSquaredTo(whereToGo);
 		if (dist>0&&rc.isActive()){

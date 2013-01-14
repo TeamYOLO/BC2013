@@ -13,12 +13,23 @@ public class RobotPlayer
 	public static void run(RobotController myRC)
 	{
 		rc = myRC;
+		RobotType t = rc.getType();
 
 		try{
-			if (rc.getType()==RobotType.SOLDIER){
+			if (t == RobotType.SOLDIER)
+			{
 				Soldier.soldierCode(rc);
-			}else{
+			}
+			else if(t == RobotType.HQ)
+			{
 				HQ.hqCode(rc);
+			}
+			else
+			{
+				while(true)
+				{
+					rc.yield();
+				}
 			}
 		}catch (Exception e){
 			System.out.println("caught exception before it killed us:");
