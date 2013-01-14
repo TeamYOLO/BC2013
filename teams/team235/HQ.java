@@ -6,7 +6,6 @@ public class HQ {
 
 	private static RobotController rc;
 
-
 	public static void hqCode(RobotController myRC) throws GameActionException{
 		rc=myRC;
 		while(true) {
