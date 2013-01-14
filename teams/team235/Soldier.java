@@ -29,15 +29,20 @@ public class Soldier {
 						{
 							if(rc.isActive())
 							{
+								System.out.println(rc.senseCaptureCost()+ " " + Clock.getRoundNum());
 								if(rc.senseCaptureCost() < rc.getTeamPower())
 									if(rc.readBroadcast(campChannel)==gen) {
 										//System.out.println("building generator BIATCH");
 										rc.broadcast(campChannel, sup);
 										rc.captureEncampment(RobotType.GENERATOR);
+
 									}
 									else { 
 										//System.out.println("building supplier FUUUUU");
 										rc.captureEncampment(RobotType.SUPPLIER);
+										while(true) {
+											rc.yield(); //TODO-tempfix
+										}
 									}
 							}
 						}
