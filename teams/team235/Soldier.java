@@ -2,6 +2,9 @@ package team235;
 
 import battlecode.common.*;
 public class Soldier {
+	private int campChannel = 45123;
+	private int gen = 6;
+	private int sup = 879;
 	
 	private static RobotController rc;
 	private static MapLocation rallyPoint;
