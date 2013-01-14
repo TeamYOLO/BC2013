@@ -26,7 +26,8 @@ public class Soldier {
 						{
 							if(rc.isActive())
 							{
-								rc.captureEncampment(RobotType.SUPPLIER);
+								if(rc.senseCaptureCost() < rc.getTeamPower())
+									rc.captureEncampment(RobotType.SUPPLIER);
 							}
 						}
 						else if(rc.senseNearbyGameObjects(Robot.class, rallyPoint, 0, rc.getTeam()).length > 0)
