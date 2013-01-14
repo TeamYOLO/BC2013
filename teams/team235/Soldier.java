@@ -2,9 +2,9 @@ package team235;
 
 import battlecode.common.*;
 public class Soldier {
-	private int campChannel = 45123;
-	private int gen = 6;
-	private int sup = 879;
+	private static int campChannel = 45123;
+	private static int gen = 6;
+	private static int sup = 0;
 	
 	private static RobotController rc;
 	private static MapLocation rallyPoint;
@@ -20,7 +20,7 @@ public class Soldier {
 			try{
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,1000000,rc.getTeam().opponent());
 				if(enemyRobots.length==0){//no enemies nearby
-					if (Clock.getRoundNum()<200)
+					if (Clock.getRoundNum()<1000)
 					{						
 						MapLocation[] camps = rc.senseAllEncampmentSquares();
 						rallyPoint = findClosestLocation(camps);
@@ -30,7 +30,15 @@ public class Soldier {
 							if(rc.isActive())
 							{
 								if(rc.senseCaptureCost() < rc.getTeamPower())
-									rc.captureEncampment(RobotType.SUPPLIER);
+									if(rc.readBroadcast(campChannel)==gen) {
+										System.out.println("building generator BIATCH");
+										rc.broadcast(campChannel, sup);
+										rc.captureEncampment(RobotType.GENERATOR);
+									}
+									else { 
+										System.out.println("building supplier FUUUUU");
+										rc.captureEncampment(RobotType.SUPPLIER);
+									}
 							}
 						}
 						else if(rc.senseNearbyGameObjects(Robot.class, rallyPoint, 0, rc.getTeam()).length > 0)
