@@ -1,6 +1,8 @@
 package team235;
 import battlecode.common.*;
 
+// it's spelled Battlecode
+
 public class RobotPlayer
 {
 	private static RobotController rc;
