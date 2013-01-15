@@ -4,11 +4,11 @@ import battlecode.common.*;
 
 public class HQ {
 
-	
+
 	private static int campChannel = 45123;
 	private static int gen = 6;
 	private static int sup = 0;
-	
+
 	private static RobotController rc;
 	private static double Eprime [] = new double[10];
 	private static double Eprev = 40 ;
@@ -22,21 +22,28 @@ public class HQ {
 			if (rc.isActive()) {
 				// Spawn a soldier
 				Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-				if (rc.canMove(dir))
+				if (rc.canMove(dir)) {
 					rc.spawn(dir);
-				
+				} else {
+					for(Direction d:Direction.values()){
+						if (rc.canMove(d)) {
+							rc.spawn(d);
+							break;
+						}
+					}
+				}
 				if(doWeNeedGenerator()) {
 					gencount++;
 					rc.broadcast(campChannel, gen);
 				}
 				//Eprime[index] = rc.getTeamPower() - Eprev;
 				//Eprev = rc.getTeamPower(); 
-				
-				
+
+
 			}
-			
-			
-			
+
+
+
 			rc.yield();
 		}
 	}
@@ -48,12 +55,12 @@ public class HQ {
 		}
 		if(3*teambots>40+10*gencount)
 		{
-		  return true;
+			return true;
 		}
 		//for(int i = 0; i < Eprime.length; ++i) {
 		//	sum = sum + Eprime[i];
 		//}
-		
+
 		return false;
 	}
 }

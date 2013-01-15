@@ -20,10 +20,11 @@ public class Soldier {
 		surroundingIndices = initSurroundingIndices(Direction.NORTH);
 		while(true){
 			try{
-				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,1000000,rc.getTeam().opponent());
+				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,63,rc.getTeam().opponent());
 				if(enemyRobots.length==0){//no enemies nearby
 					if (expandOrRally())
-					{	// we should be expanding			
+					{	// we should be expanding
+						rc.setIndicatorString(0, "in expand section");
 						MapLocation[] camps = rc.senseAllEncampmentSquares();
 						rallyPoint = findClosestLocation(camps);
 						
@@ -31,16 +32,13 @@ public class Soldier {
 						{
 							if(rc.isActive())
 							{
-								System.out.println(rc.senseCaptureCost()+ " " + Clock.getRoundNum());
 								if(rc.senseCaptureCost() < rc.getTeamPower())
 									if(rc.readBroadcast(campChannel)==gen) {
-										//System.out.println("building generator BIATCH");
 										rc.broadcast(campChannel, sup);
 										rc.captureEncampment(RobotType.GENERATOR);
 
 									}
 									else { 
-										//System.out.println("building supplier FUUUUU");
 										rc.captureEncampment(RobotType.SUPPLIER);
 									}
 							}
@@ -57,13 +55,19 @@ public class Soldier {
 					}
 					else
 					{
-						if(rc.senseNearbyGameObjects(Robot.class, 33, rc.getTeam()).length > massAmount)
+						//we should be massing
+						rallyPoint = findRallyPoint();
+						rc.setIndicatorString(0, "in mass section");
+						if(rc.senseNearbyGameObjects(Robot.class,rallyPoint, 25, rc.getTeam()).length > massAmount)
 						{
 							while(true)
 							{
 								goToLocation(rc.senseEnemyHQLocation());
 								rc.yield();
 							}
+						}
+						else {
+							goToLocation(rallyPoint);
 						}
 					}
 				}
@@ -262,10 +266,12 @@ public class Soldier {
 		int numCamps = rc.senseAllEncampmentSquares().length;
 		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
 		
-		if(numAlliedCamps > 19) return false;
+		if(numAlliedCamps > 12) return false;
+		if(numCamps < 20 && numAlliedCamps >8 ) return false; 
+		if(numCamps < 10 && numAlliedCamps >3)  return false;
 		else if(numCamps < 40 && numAlliedCamps > numCamps-1/2) return false;
 		
-		rallyPoint = findRallyPoint();
+		
 		return true;
 	}
 }
