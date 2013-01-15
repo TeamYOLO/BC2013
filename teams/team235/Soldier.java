@@ -6,6 +6,8 @@ public class Soldier {
 	private static int gen = 6;
 	private static int sup = 0;
 	
+	private static int massAmount = 15;
+	
 	private static RobotController rc;
 	private static MapLocation rallyPoint;
 	private static int[][] neighborArray;
@@ -20,8 +22,8 @@ public class Soldier {
 			try{
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,1000000,rc.getTeam().opponent());
 				if(enemyRobots.length==0){//no enemies nearby
-					if (Clock.getRoundNum()<1000)
-					{						
+					if (expandOrRally())
+					{	// we should be expanding			
 						MapLocation[] camps = rc.senseAllEncampmentSquares();
 						rallyPoint = findClosestLocation(camps);
 						
@@ -40,9 +42,6 @@ public class Soldier {
 									else { 
 										//System.out.println("building supplier FUUUUU");
 										rc.captureEncampment(RobotType.SUPPLIER);
-										while(true) {
-											rc.yield(); //TODO-tempfix
-										}
 									}
 							}
 						}
@@ -58,7 +57,14 @@ public class Soldier {
 					}
 					else
 					{
-						goToLocation(rc.senseEnemyHQLocation());
+						if(rc.senseNearbyGameObjects(Robot.class, 33, rc.getTeam()).length > massAmount)
+						{
+							while(true)
+							{
+								goToLocation(rc.senseEnemyHQLocation());
+								rc.yield();
+							}
+						}
 					}
 				}
 				else
@@ -149,8 +155,8 @@ public class Soldier {
 	private static MapLocation findRallyPoint() {
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
-		int x = (enemyLoc.x+ourLoc.x)/2;
-		int y = (enemyLoc.y+ourLoc.y)/2;
+		int x = (enemyLoc.x+2*ourLoc.x)/3;
+		int y = (enemyLoc.y+2*ourLoc.y)/3;
 		MapLocation rallyPoint = new MapLocation(x,y);
 		return rallyPoint;
 	}
@@ -248,13 +254,18 @@ public class Soldier {
 		return goodness;
 	}
 	
-	public static boolean expandOrRally() // true for rally
+	public static boolean expandOrRally() // true for expand
 	{
 		// rush distance
-		double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
+		//double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
 		// number of encampments
 		int numCamps = rc.senseAllEncampmentSquares().length;
+		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
 		
+		if(numAlliedCamps > 19) return false;
+		else if(numCamps < 40 && numAlliedCamps > numCamps-1/2) return false;
+		
+		rallyPoint = findRallyPoint();
 		return true;
 	}
 }
