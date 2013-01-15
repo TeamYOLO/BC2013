@@ -149,19 +149,12 @@ public class Soldier {
 	private static MapLocation findRallyPoint() {
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
-		int x = (enemyLoc.x+3*ourLoc.x)/4;
-		int y = (enemyLoc.y+3*ourLoc.y)/4;
+		int x = (enemyLoc.x+ourLoc.x)/2;
+		int y = (enemyLoc.y+ourLoc.y)/2;
 		MapLocation rallyPoint = new MapLocation(x,y);
 		return rallyPoint;
 	}
-	public static void hqCode() throws GameActionException{
-		if (rc.isActive()) {
-			// Spawn a soldier
-			Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-			if (rc.canMove(dir))
-				rc.spawn(dir);
-		}
-	}
+	
 	public static String intListToString(int[] intList){
 		String sofar = "";
 		for(int anInt:intList){
@@ -169,6 +162,7 @@ public class Soldier {
 		}
 		return sofar;
 	}
+	
 	// ARRAY-BASED NEIGHBOR DETECTION
 	private static void smartCountNeighbors(Robot[] enemyRobots,MapLocation closestEnemy) throws GameActionException{
 		//build a 5 by 5 array of neighboring units
@@ -252,5 +246,15 @@ public class Soldier {
 		double numberOfEnemies = neighborInt-numberOfAllies;
 		// goodness = ?????; //what heuristic will you use?
 		return goodness;
+	}
+	
+	public static boolean expandOrRally() // true for rally
+	{
+		// rush distance
+		double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
+		// number of encampments
+		int numCamps = rc.senseAllEncampmentSquares().length;
+		
+		return true;
 	}
 }

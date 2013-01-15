@@ -1,6 +1,7 @@
 package team235;
 
 import battlecode.common.*;
+import battlecode.engine.instrumenter.lang.System;
 
 public class HQ {
 
@@ -19,6 +20,8 @@ public class HQ {
 	public static void hqCode(RobotController myRC) throws GameActionException{
 		rc=myRC;
 		while(true) {
+			System.out.println(rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation()) + " " + rc.senseAllEncampmentSquares().length);
+			rc.resign();
 			if (rc.isActive()) {
 				// Spawn a soldier
 				Direction dir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
