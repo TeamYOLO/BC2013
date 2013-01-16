@@ -7,7 +7,7 @@ public class Soldier
 	private static int nukeChannel = 2894;
 	private static int opponentNukeHalfDone = 56893349;
 
-	private static int campChannel = 45123;
+	private static int campChannel = 45127;
 	private static int gen = 6;
 	private static int sup = 0;
 
@@ -359,7 +359,7 @@ public class Soldier
 
 		if(numAlliedCamps > 12) return false;
 		if(numCamps < 20 && numAlliedCamps >8 ) return false; 
-		if(numCamps < 10 && numAlliedCamps >3)  return false;
+		if(numCamps < 10 && numAlliedCamps >2)  return false;
 		else if(numCamps < 40 && numAlliedCamps > numCamps-1/2) return false;
 
 		return true;
