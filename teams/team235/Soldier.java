@@ -51,10 +51,12 @@ public class Soldier
 				}
 				else
 				{
+					/*
 					// enemy spotted
 					MapLocation closestEnemy = findClosestRobot(enemyRobots);
 					smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
 					goToLocation(closestEnemy);
+					*/
 				}
 			}
 			catch (Exception e)
