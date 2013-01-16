@@ -1,21 +1,18 @@
 package team235;
-import battlecode.common.*;
 
-// it's spelled Battlecode
+import battlecode.common.*;
 
 public class RobotPlayer
 {
 	private static RobotController rc;
-	private static MapLocation rallyPoint;
-	private static int[][] neighborArray;
-	private static int[] self = {2,2};
-	private static int[][] surroundingIndices = new int[5][5];
+	
 	public static void run(RobotController myRC)
 	{
 		rc = myRC;
 		RobotType t = rc.getType();
 
-		try{
+		try
+		{
 			if (t == RobotType.SOLDIER)
 			{
 				Soldier.soldierCode(rc);
@@ -31,10 +28,11 @@ public class RobotPlayer
 					rc.yield();
 				}
 			}
-		}catch (Exception e){
+		}
+		catch (Exception e)
+		{
 			System.out.println("caught exception before it killed us:");
 			e.printStackTrace();
 		}
 	}
-
 }
