@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 public class Soldier
 {
+	private final static int localScanRange = 14;
+	
 	private static int nukeChannel = 2894;
 	private static int opponentNukeHalfDone = 56893349;
 
@@ -12,6 +14,8 @@ public class Soldier
 	private static int sup = 0;
 
 	private static int massAmount = 15;
+
+	private static boolean localscan = false;
 
 	private static RobotController rc;
 	private static MapLocation rallyPoint;
@@ -56,7 +60,7 @@ public class Soldier
 					MapLocation closestEnemy = findClosestRobot(enemyRobots);
 					smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
 					goToLocation(closestEnemy);
-					*/
+					 */
 				}
 			}
 			catch (Exception e)
@@ -70,10 +74,21 @@ public class Soldier
 
 	private static void expand() throws GameActionException
 	{
-		rallyPoint = findClosestLocation(rc.senseAllEncampmentSquares());
-
+		//rallyPoint = findClosestLocation(rc.senseAllEncampmentSquares());
+		if(!localscan) {
+			rallyPoint = findClosestEmptyCamp();
+		}
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
 		{
+			if(!localscan) {
+				rallyPoint = findFurthestLocalCamp();
+				localscan=true;
+			}
+		}
+		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
+		{
+
+			
 			if(rc.isActive()) // if we are allowed to capture
 			{
 				if(rc.senseCaptureCost() < rc.getTeamPower()) // if we have enough power to capture
@@ -152,6 +167,39 @@ public class Soldier
 		return closestEnemy;
 	}
 
+
+	private static MapLocation checkNearbyEncampents(MapLocation location, MapLocation[] AllenCampments) throws GameActionException {
+		int results[][] = new int[5][5];
+		MapLocation result = null;
+		int maxCamps = 0;
+		return result;
+	}
+
+	private static MapLocation checkNearbyEncampentsold(MapLocation location) throws GameActionException {
+		int results[] = new int[9];
+		MapLocation result = null;
+		int maxCamps = 0;
+
+
+		for(Direction d : Direction.values()) {
+			if(d!=Direction.OMNI && rc.senseEncampmentSquare(location.add(d))) {
+				for(Direction d2 : Direction.values() ) {
+					if(rc.senseEncampmentSquare(location.add(d2))) //there is an encampent
+						results[d.ordinal()]++; 
+				}
+			}
+		}
+
+		for(Direction d : Direction.values()) {
+			if(d!=Direction.OMNI && rc.senseEncampmentSquare(location.add(d))) {
+				if(results[d.ordinal()]>maxCamps) {
+					result = location.add(d);
+					maxCamps = results[d.ordinal()];
+				}
+			}
+		}
+		return result;
+	}
 	private static MapLocation findClosestLocation(MapLocation[] locArray) throws GameActionException {
 		int closestDist = 1000000;
 		MapLocation me = rc.getLocation();
@@ -168,7 +216,25 @@ public class Soldier
 		}
 		return closestLocation;
 	}
+	private static MapLocation findFurthestLocalCamp() throws GameActionException {
+		MapLocation result = null;
+		MapLocation me = rc.getLocation();
+		MapLocation[] locArray = rc.senseEncampmentSquares(me, localScanRange, Team.NEUTRAL);
+		int furthestDist = -1;
 
+		for (int i = 0; i < locArray.length; i++)
+		{
+			MapLocation aLocation = locArray[i];
+			int dist = aLocation.distanceSquaredTo(me);
+			if (dist > furthestDist && rc.senseNearbyGameObjects(Robot.class, aLocation, 0, rc.getTeam()).length < 1)
+			{
+				furthestDist = dist;
+				result = aLocation;
+			}
+		}
+		return result;
+
+	}
 	private static MapLocation findClosestEmptyCamp() throws GameActionException
 	{
 		MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
