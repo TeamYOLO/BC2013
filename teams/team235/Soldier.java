@@ -4,14 +4,19 @@ import battlecode.common.*;
 
 public class Soldier
 {
+	private final static int localScanRange = 14;
+	
 	private static int nukeChannel = 2894;
 	private static int opponentNukeHalfDone = 56893349;
 
 	private static int campChannel = 45127;
 	private static int gen = 6;
+	private static int genInProduction = 83741234;
 	private static int sup = 0;
 
 	private static int massAmount = 15;
+
+	private static boolean localscan = false;
 
 	private static RobotController rc;
 	private static MapLocation rallyPoint;
@@ -56,7 +61,7 @@ public class Soldier
 					MapLocation closestEnemy = findClosestRobot(enemyRobots);
 					smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
 					goToLocation(closestEnemy);
-					*/
+					 */
 				}
 			}
 			catch (Exception e)
@@ -67,23 +72,55 @@ public class Soldier
 			rc.yield();
 		}
 	}
+	
+	private static int getNumberOfAlliedRobosAfterMe() throws GameActionException
+	{
+		int retval = 0;
+		int myID = rc.getRobot().getID();
+		
+		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
+		
+		for(Robot r : robos)
+		{
+			if(r.getID() > myID)
+			{
+				++retval;
+			}
+		}
+		
+		return retval;
+	}
 
 	private static void expand() throws GameActionException
 	{
-		rallyPoint = findClosestLocation(rc.senseAllEncampmentSquares());
-
+		//rallyPoint = findClosestLocation(rc.senseAllEncampmentSquares());
+		if(!localscan) {
+			rallyPoint = findClosestEmptyCamp();
+		}
+		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
+		{
+			if(!localscan) {
+				rallyPoint = findFurthestLocalCamp();
+				localscan=true;
+			}
+		}
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
 		{
 			if(rc.isActive()) // if we are allowed to capture
 			{
-				if(rc.senseCaptureCost() < rc.getTeamPower()) // if we have enough power to capture
+				if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
 				{
-					if(rc.readBroadcast(campChannel) == gen)
+					int readIn = rc.readBroadcast(campChannel);
+					if(readIn == gen)
 					{
-						rc.broadcast(campChannel, sup);
+						rc.broadcast(campChannel, genInProduction);
 						rc.captureEncampment(RobotType.GENERATOR);
 					}
-					else if(rc.readBroadcast(campChannel) == sup)
+					else if(readIn == genInProduction)
+					{
+						rc.captureEncampment(RobotType.SUPPLIER);
+					}
+					else if(readIn == sup)
 					{ 
 						rc.captureEncampment(RobotType.SUPPLIER);
 					}
@@ -97,6 +134,10 @@ public class Soldier
 		else if(rc.senseNearbyGameObjects(Robot.class, rallyPoint, 0, rc.getTeam()).length > 0) // if there is an allied robot on our rally point
 		{
 			rallyPoint = findClosestEmptyCamp();
+			if(rallyPoint == null)
+			{
+				rallyPoint = findRallyPoint();
+			}
 			goToLocation(rallyPoint);
 		}
 		else
@@ -168,7 +209,25 @@ public class Soldier
 		}
 		return closestLocation;
 	}
+	private static MapLocation findFurthestLocalCamp() throws GameActionException {
+		MapLocation result = null;
+		MapLocation me = rc.getLocation();
+		MapLocation[] locArray = rc.senseEncampmentSquares(me, localScanRange, Team.NEUTRAL);
+		int furthestDist = -1;
 
+		for (int i = 0; i < locArray.length; i++)
+		{
+			MapLocation aLocation = locArray[i];
+			int dist = aLocation.distanceSquaredTo(me);
+			if (dist > furthestDist && rc.senseNearbyGameObjects(Robot.class, aLocation, 0, rc.getTeam()).length < 1)
+			{
+				furthestDist = dist;
+				result = aLocation;
+			}
+		}
+		return result;
+
+	}
 	private static MapLocation findClosestEmptyCamp() throws GameActionException
 	{
 		MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
@@ -360,7 +419,7 @@ public class Soldier
 		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
 
 		if(numAlliedCamps > 12) return false;
-		if(numCamps < 20 && numAlliedCamps >8 ) return false; 
+		if(numCamps < 20 && numAlliedCamps >8) return false; 
 		if(numCamps < 10 && numAlliedCamps >2)  return false;
 		else if(numCamps < 40 && numAlliedCamps > numCamps-1/2) return false;
 

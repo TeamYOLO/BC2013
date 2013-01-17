@@ -9,6 +9,7 @@ public class HQ {
 
 	private static int campChannel = 45127;
 	private static int gen = 6;
+	private static int genInProduction = 83741234;
 	private static int sup = 0;
 
 	private static RobotController rc;
@@ -17,6 +18,8 @@ public class HQ {
 	private static double minPowerThreshold = 100; //TODO-findthisvalue
 	private static double minRoundThreshold = 100; //TODO-findthisvalue
 	private static int gencount = 0;
+	private static int soldiercount = 0;
+	private static int othercount = 0;
 
 	private static int prevRoundsOfEnergyDecline = 0;
 	private static boolean researchedFusion = false;
@@ -25,6 +28,8 @@ public class HQ {
 	{
 		rc = myRC;
 		Direction defaultSpawnDir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
+		
+		
 		while(true) 
 		{
 			/*if(!researchedFusion)
@@ -55,26 +60,41 @@ public class HQ {
 				}
 			}
 			 */
+			String displayString = "";
+			
 			if (rc.isActive()) 
 			{
-				// Spawn a soldier
-				if (rc.canMove(defaultSpawnDir))
+				int readIn = rc.readBroadcast(campChannel);
+				
+				if(!doWeNeedGenerator())
 				{
-					rc.spawn(defaultSpawnDir);
-				}
-				else
-				{
-					for(Direction d : Direction.values()) // TODO: optimize secondary direction finding
+					rc.broadcast(campChannel, sup);
+					displayString += "sup";
+					
+					// Spawn a soldier
+					if (rc.canMove(defaultSpawnDir))
 					{
-						if(rc.canMove(d))
+						rc.spawn(defaultSpawnDir);
+					}
+					else
+					{
+						for(Direction d : Direction.values()) // TODO: optimize secondary direction finding
 						{
-							rc.spawn(d);
-							break;
+							if(rc.canMove(d))
+							{
+								rc.spawn(d);
+								break;
+							}
 						}
 					}
 				}
-				if(doWeNeedGenerator())
+				else // we do need a generator
 				{
+					if(readIn == sup || (readIn != genInProduction && readIn != gen))
+					{
+						rc.broadcast(campChannel, gen);
+						displayString += " gen";
+					}
 					if(!researchedFusion)
 					{
 						while(!rc.hasUpgrade(Upgrade.FUSION))
@@ -87,14 +107,15 @@ public class HQ {
 						}
 						researchedFusion = true;
 					}
+					else if(!rc.hasUpgrade(Upgrade.DEFUSION))
+					{
+						rc.researchUpgrade(Upgrade.DEFUSION);
+					}
 					else
 					{
-						gencount++;
-						rc.broadcast(campChannel, gen);
+						// ??? what to do if we shouldn't be producing troops and already have our vital upgrades?
 					}
 				}
-				//Eprime[index] = rc.getTeamPower() - Eprev;
-				//Eprev = rc.getTeamPower();
 			}
 
 			if(Clock.getRoundNum() > 200)
@@ -105,37 +126,42 @@ public class HQ {
 				}
 			}
 
+			rc.setIndicatorString(0, displayString);
 			rc.yield();
 		}
 	}
-	public static boolean doWeNeedGenerator()
+	public static boolean doWeNeedGenerator() throws GameActionException
 	{
-		if(!researchedFusion)
+		if(rc.readBroadcast(campChannel) == genInProduction) return false;
+		
+		if(rc.getTeamPower() < minPowerThreshold && Clock.getRoundNum() > minRoundThreshold)
 		{
-			//double sum = 0;
-			int teambots = rc.senseNearbyGameObjects(Robot.class, 100000, rc.getTeam()).length;
-			if(rc.getTeamPower() < minPowerThreshold && Clock.getRoundNum() > minRoundThreshold)
-			{
-				return true;
-			}
-			if(3 * teambots > 40 + 10 * gencount)
-			{
-				return true;
-			}
-			//for(int i = 0; i < Eprime.length; ++i) {
-			//	sum = sum + Eprime[i];
-			//}
-		}
-		else
-		{
-			int teambots = rc.senseNearbyGameObjects(Robot.class, 100000, rc.getTeam()).length;
-			
-			if(2.5 * teambots > 40 + 10 * gencount && rc.getTeamPower() < 300)
-			{
-				return true;
-			}
+			return true;
 		}
 
+		gencount = 0;
+		soldiercount = 0;
+		othercount = 0;
+
+		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
+		for(Robot r : robos)
+		{
+			RobotType rt = rc.senseRobotInfo(r).type;
+			if(rt == RobotType.GENERATOR) ++gencount;
+			else if(rt == RobotType.SOLDIER) ++soldiercount;
+			else ++othercount;
+		}
+
+		double decay = .8;
+		if(researchedFusion)
+		{
+			decay = .99;
+		}
+
+		if((40 + (10 * gencount) - (1.6 * soldiercount) - (1 * othercount)) * decay < 1)
+		{
+			return true;
+		}
 		return false;
 	}
 }
