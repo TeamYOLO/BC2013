@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class HQ {
 	private static int allInRound = -100;
 	
-	private static int rallyRadius = 25;
+	private static int rallyRadius = 33;
 
 	private static int nukeChannel = 2894;
 	private static int opponentNukeHalfDone = 56893349;
@@ -17,6 +17,7 @@ public class HQ {
 
 	private static int attackChannel = 8888;
 	private static int ALLIN = 13371337;
+	private static int massAmount = 25;
 	
 	private static int rallyXChannel = 629;
 	private static int rallyYChannel = 58239;
@@ -121,7 +122,7 @@ public class HQ {
 			}
 		}
 		
-		if(massedRobos > 15) // if we should all in...
+		if(massedRobos > massAmount) // if we should all in...
 		{
 			rc.broadcast(attackChannel, ALLIN);
 			allInRound = Clock.getRoundNum();
