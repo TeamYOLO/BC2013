@@ -106,6 +106,8 @@ public class Soldier
 		}
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
 		{
+
+			
 			if(rc.isActive()) // if we are allowed to capture
 			{
 				if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
@@ -193,6 +195,39 @@ public class Soldier
 		return closestEnemy;
 	}
 
+
+	private static MapLocation checkNearbyEncampents(MapLocation location, MapLocation[] AllenCampments) throws GameActionException {
+		int results[][] = new int[5][5];
+		MapLocation result = null;
+		int maxCamps = 0;
+		return result;
+	}
+
+	private static MapLocation checkNearbyEncampentsold(MapLocation location) throws GameActionException {
+		int results[] = new int[9];
+		MapLocation result = null;
+		int maxCamps = 0;
+
+
+		for(Direction d : Direction.values()) {
+			if(d!=Direction.OMNI && rc.senseEncampmentSquare(location.add(d))) {
+				for(Direction d2 : Direction.values() ) {
+					if(rc.senseEncampmentSquare(location.add(d2))) //there is an encampent
+						results[d.ordinal()]++; 
+				}
+			}
+		}
+
+		for(Direction d : Direction.values()) {
+			if(d!=Direction.OMNI && rc.senseEncampmentSquare(location.add(d))) {
+				if(results[d.ordinal()]>maxCamps) {
+					result = location.add(d);
+					maxCamps = results[d.ordinal()];
+				}
+			}
+		}
+		return result;
+	}
 	private static MapLocation findClosestLocation(MapLocation[] locArray) throws GameActionException {
 		int closestDist = 1000000;
 		MapLocation me = rc.getLocation();
