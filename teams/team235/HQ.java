@@ -3,6 +3,7 @@ package team235;
 import battlecode.common.*;
 
 public class HQ {
+	private static int allInRound = -100;
 	
 	private static int rallyRadius = 25;
 
@@ -121,6 +122,7 @@ public class HQ {
 		if(massedRobos > 15) // if we should all in...
 		{
 			rc.broadcast(attackChannel, ALLIN);
+			allInRound = Clock.getRoundNum();
 		}
 	}
 	
@@ -136,6 +138,7 @@ public class HQ {
 	public static boolean doWeNeedGenerator() throws GameActionException
 	{
 		if(rc.readBroadcast(campChannel) == genInProduction) return false;
+		if(Clock.getRoundNum() - allInRound < 80) return false;
 
 		if(rc.getTeamPower() < minPowerThreshold && Clock.getRoundNum() > minRoundThreshold)
 		{
