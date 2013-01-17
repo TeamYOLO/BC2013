@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Soldier
 {
-	private static int rallyRadius = 13;
+	private static int rallyRadius = 25;
 	
 	private final static int localScanRange = 14;
 	
