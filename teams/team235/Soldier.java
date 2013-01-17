@@ -63,6 +63,7 @@ public class Soldier
 				else
 				{
 					// enemy spotted
+					localscan = false;
 					MapLocation closestEnemy = findClosestRobot(enemyRobots);
 					smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
 					goToLocation(closestEnemy);

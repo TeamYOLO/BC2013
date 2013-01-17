@@ -51,9 +51,11 @@ public class HQ {
 				{
 					rc.broadcast(campChannel, sup);
 					displayString += "sup";
+					
+					
 
 					// Spawn a soldier
-					if (rc.canMove(defaultSpawnDir))
+					if (rc.canMove(defaultSpawnDir) && rc.senseMine(rc.getLocation().add(defaultSpawnDir)) == null)
 					{
 						rc.spawn(defaultSpawnDir);
 					}
@@ -61,7 +63,7 @@ public class HQ {
 					{
 						for(Direction d : Direction.values()) // TODO: optimize secondary direction finding
 						{
-							if(rc.canMove(d))
+							if(rc.canMove(d) && rc.senseMine(rc.getLocation().add(d)) == null)
 							{
 								rc.spawn(d);
 								break;
