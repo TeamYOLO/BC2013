@@ -13,16 +13,18 @@ public class Soldier
 	private static int gen = 6;
 	private static int genInProduction = 83741234;
 	private static int sup = 0;
-	
+
 	private static final int attackChannel = 8888;
 	private static final int ALLIN = 13371337;
 
-	
+
 	private static int commandChannel = 12334;
 	private static final int expand = 2;
 	private static final int rally = 3;
 	private static final int buildIndividual = 4;
 
+	private static int singleExpandXChannel = 8472;
+	private static int singleExpandYChannel = 8473;
 
 	private static int rallyXChannel = 629;
 	private static int rallyYChannel = 58239;
@@ -410,5 +412,55 @@ public class Soldier
 	public static int HQCommand() throws GameActionException // true for expand
 	{
 		return rc.readBroadcast(commandChannel);
+	}
+
+	public static void expandIndividual() throws GameActionException
+	{
+		MapLocation expandLocation = new MapLocation(rc.readBroadcast(singleExpandXChannel),rc.readBroadcast(singleExpandYChannel));
+		rc.broadcast(commandChannel, rally);
+		while(true) {
+			if(rc.getLocation().distanceSquaredTo(expandLocation) < 1) // if we are at the location of the rally point
+			{
+				if(rc.isActive()) // if we are allowed to capture
+				{
+					if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
+					{
+						int readIn = rc.readBroadcast(campChannel);
+						if(readIn == gen)
+						{
+							rc.broadcast(campChannel, genInProduction);
+							rc.captureEncampment(RobotType.GENERATOR);
+						}
+						else if(readIn == genInProduction)
+						{
+							rc.captureEncampment(RobotType.SUPPLIER);
+						}
+						else if(readIn == sup)
+						{ 
+							rc.captureEncampment(RobotType.SUPPLIER);
+						}
+						else // TODO: transmissions may be being scrambled, for now just make supplier
+						{
+							rc.captureEncampment(RobotType.SUPPLIER);
+						}
+						break;
+					}
+				}
+			}
+			else if(rc.senseNearbyGameObjects(Robot.class, expandLocation, 0, rc.getTeam()).length > 0) // if there is an allied robot on our rally point
+			{
+				expandLocation = findClosestEmptyCamp();
+				if(expandLocation == null)
+				{
+					expandLocation = findRallyPoint();
+				}
+				goToLocation(expandLocation);
+			}
+			else
+			{
+				goToLocation(expandLocation);
+			}
+			rc.yield();
+		}
 	}
 }

@@ -13,9 +13,10 @@ public class HQ {
 	private static int commandChannel = 12334;
 	private static int expand = 2;
 	private static int rallyCommand = 3;
-	private static int buildGen = 4;
-	private static int buildSup = 5;
+	private static int buildIndividual = 4;
 
+	private static int singleExpandXChannel = 8472;
+	private static int singleExpandYChannel = 8473;
 
 
 	private static int campChannel = 45127;
@@ -206,9 +207,22 @@ public class HQ {
 		}
 	}
 
-	public static void singleExpand() {
-		//TODO
+	public static void singleExpand() throws GameActionException {
+		int numCamps = rc.senseAlliedEncampmentSquares().length;
+		if(numCamps >= optimalBuildings + farAwayButSafeBuildings)
+			return;
 		
+		if(numCamps < optimalBuildings) {
+			
+		}
+		
+		if(false) { //figure out condition
+			MapLocation expansion = null;
+			expansion = findClosestEmptyCamp();
+			rc.broadcast(commandChannel, buildIndividual);
+			rc.broadcast(singleExpandXChannel, expansion.x);
+			rc.broadcast(singleExpandYChannel, expansion.y);
+		}
 	}
 	public static boolean expandOrRally() throws GameActionException //true for expand
 	{
@@ -222,8 +236,6 @@ public class HQ {
 		}
 		
 		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
-
-		
 		if(numAlliedCamps > 13) {
 			rc.broadcast(commandChannel, rallyCommand);
 			expandPhase = false;
@@ -238,6 +250,25 @@ public class HQ {
 
 		rc.broadcast(commandChannel, expand);
 		return true;
+	}
+	
+	private static MapLocation findClosestEmptyCamp() throws GameActionException
+	{
+		MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
+		int closestDist = 1000000;
+		MapLocation me = rc.getLocation();
+		MapLocation closestLocation = null;
+		for (int i = 0; i < locArray.length; i++)
+		{
+			MapLocation aLocation = locArray[i];
+			int dist = aLocation.distanceSquaredTo(me);
+			if (dist < closestDist && rc.senseNearbyGameObjects(Robot.class, aLocation, 0, rc.getTeam()).length < 1)
+			{
+				closestDist = dist;
+				closestLocation = aLocation;
+			}
+		}
+		return closestLocation;
 	}
 
 }
