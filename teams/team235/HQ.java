@@ -39,6 +39,8 @@ public class HQ {
 
 	private static int optimalBuildings = 0;
 	private static int farAwayButSafeBuildings = 0;
+	
+	private static int powerThreshold =500;
 
 	private static boolean expandPhase = true;
 	public static void hqCode(RobotController myRC) throws GameActionException
@@ -154,6 +156,7 @@ public class HQ {
 	{
 		if(rc.readBroadcast(campChannel) == genInProduction) return false;
 		if(Clock.getRoundNum() - allInRound < 80) return false;
+		if(rc.readBroadcast(commandChannel) == rallyCommand && rc.getTeamPower()>powerThreshold) return false;
 
 		if(rc.getTeamPower() < minPowerThreshold && Clock.getRoundNum() > minRoundThreshold)
 		{
@@ -193,18 +196,19 @@ public class HQ {
 
 		for (MapLocation loc : neutralCamps) {
 			double toUs=loc.distanceSquaredTo(me);
-			double toThem = loc.distanceSquaredTo(them);
-			if((toUs/toThem < .81)) {
-				optimalBuildings++;
-				if (rushdistance < toUs)
-					farAwayButSafeBuildings++;
+			double toThem = loc.distanceSquaredTo(them);			
+			if(toUs/toThem < .81)
+			{
+				if(rushdistance > toUs)
+					optimalBuildings++;
+				else farAwayButSafeBuildings++;
 			}
 		}
-
 	}
 
 	public static void singleExpand() {
-		//TODO - Implement this
+		//TODO
+		
 	}
 	public static boolean expandOrRally() throws GameActionException //true for expand
 	{
