@@ -5,20 +5,25 @@ import battlecode.common.*;
 public class Soldier
 {
 	private static int rallyRadius = 25;
-	
+
 	private final static int localScanRange = 14;
-	
-	private static int nukeChannel = 2894;
-	private static int opponentNukeHalfDone = 56893349;
+
 
 	private static int campChannel = 45127;
 	private static int gen = 6;
 	private static int genInProduction = 83741234;
 	private static int sup = 0;
 	
-	private static int attackChannel = 8888;
-	private static int ALLIN = 13371337;
+	private static final int attackChannel = 8888;
+	private static final int ALLIN = 13371337;
+
 	
+	private static int commandChannel = 12334;
+	private static final int expand = 2;
+	private static final int rally = 3;
+	private static final int buildIndividual = 4;
+
+
 	private static int rallyXChannel = 629;
 	private static int rallyYChannel = 58239;
 
@@ -42,22 +47,16 @@ public class Soldier
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,63,rc.getTeam().opponent());
 				if(enemyRobots.length==0) // no enemies are nearby
 				{
-					if(rc.readBroadcast(nukeChannel) != opponentNukeHalfDone)
-					{
-						if (expandOrRally())
-						{	
-							// we should be expanding
-							expand();
-						}
-						else
-						{
-							//we should be massing and dancing
-							mass();
-						}
-					}
-					else // if opponent nuke is half done, we must begin the attack asap
-					{
-						mass();
+					int command = HQCommand();
+					switch (command) {
+					case expand:
+						expand();
+						break;
+					case rally:
+						rally();
+						break;
+					case buildIndividual: //TODO- implement this
+						break;
 					}
 				}
 				else
@@ -77,19 +76,19 @@ public class Soldier
 			rc.yield();
 		}
 	}
-	
+
 	private static MapLocation findRallyPoint() throws GameActionException
 	{
 		return new MapLocation(rc.readBroadcast(rallyXChannel), rc.readBroadcast(rallyYChannel));
 	}
-	
+
 	private static int getNumberOfAlliedRobosAfterMe() throws GameActionException
 	{
 		int retval = 0;
 		int myID = rc.getRobot().getID();
-		
+
 		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
-		
+
 		for(Robot r : robos)
 		{
 			if(r.getID() > myID)
@@ -97,7 +96,7 @@ public class Soldier
 				++retval;
 			}
 		}
-		
+
 		return retval;
 	}
 
@@ -117,7 +116,7 @@ public class Soldier
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
 		{
 
-			
+
 			if(rc.isActive()) // if we are allowed to capture
 			{
 				if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
@@ -158,7 +157,7 @@ public class Soldier
 		}
 	}
 
-	private static void mass() throws GameActionException
+	private static void rally() throws GameActionException
 	{
 		rallyPoint = findRallyPoint();
 		// if we are fairly close to the rally point and we have the necessary soldier counts to make up a wave, gogogogogo
@@ -408,19 +407,8 @@ public class Soldier
 		return goodness;
 	}
 
-	public static boolean expandOrRally() // true for expand
+	public static int HQCommand() throws GameActionException // true for expand
 	{
-		// rush distance
-		//double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
-		// number of encampments
-		int numCamps = rc.senseAllEncampmentSquares().length;
-		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
-
-		if(numAlliedCamps > 12) return false;
-		if(numCamps < 20 && numAlliedCamps >8) return false; 
-		if(numCamps < 10 && numAlliedCamps >2)  return false;
-		else if(numCamps < 40 && numAlliedCamps > numCamps-1/2) return false;
-
-		return true;
+		return rc.readBroadcast(commandChannel);
 	}
 }

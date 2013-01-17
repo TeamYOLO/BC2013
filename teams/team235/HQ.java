@@ -9,7 +9,15 @@ public class HQ {
 
 	private static int nukeChannel = 2894;
 	private static int opponentNukeHalfDone = 56893349;
-
+	
+	private static int commandChannel = 12334;
+	private static int expand = 2;
+	private static int rallyCommand = 3;
+	private static int buildGen = 4;
+	private static int buildSup = 5;
+	
+	
+	
 	private static int campChannel = 45127;
 	private static int gen = 6;
 	private static int genInProduction = 83741234;
@@ -37,11 +45,13 @@ public class HQ {
 		while(true) 
 		{
 			rc.broadcast(attackChannel, 0);
-			
 			MapLocation rally = findRallyPoint();
 			rc.broadcast(rallyXChannel, rally.x);
 			rc.broadcast(rallyYChannel, rally.y);
-			
+			if(expandOrRally())
+				rc.broadcast(commandChannel, expand);
+			else
+				rc.broadcast(commandChannel,rallyCommand);
 			String displayString = "";
 
 			if (rc.isActive()) 
@@ -171,4 +181,33 @@ public class HQ {
 		}
 		return false;
 	}
+	
+	public static boolean expandOrRally() throws GameActionException// true for expand
+	{
+		// rush distance
+		//double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
+		// number of encampments
+		int numCamps = rc.senseAllEncampmentSquares().length;
+		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
+
+		if(numAlliedCamps > 12) {
+			rc.broadcast(commandChannel, rallyCommand);
+			return false;
+		}
+		if(numCamps < 20 && numAlliedCamps >8) {
+			rc.broadcast(commandChannel, rallyCommand);
+			return false;
+		} 
+		if(numCamps < 10 && numAlliedCamps >2)  {
+			rc.broadcast(commandChannel, rallyCommand);
+			return false;
+		}
+		else if(numCamps < 40 && numAlliedCamps > numCamps-1/2) {
+			rc.broadcast(commandChannel, rallyCommand);
+			return false;
+		}
+		rc.broadcast(commandChannel, expand);
+		return true;
+	}
+	
 }
