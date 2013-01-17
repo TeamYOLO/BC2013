@@ -4,20 +4,20 @@ import battlecode.common.*;
 
 public class HQ {
 	private static int allInRound = -100;
-	
+
 	private static int rallyRadius = 33;
 
 	private static int nukeChannel = 2894;
 	private static int opponentNukeHalfDone = 56893349;
-	
+
 	private static int commandChannel = 12334;
 	private static int expand = 2;
 	private static int rallyCommand = 3;
 	private static int buildGen = 4;
 	private static int buildSup = 5;
-	
-	
-	
+
+
+
 	private static int campChannel = 45127;
 	private static int gen = 6;
 	private static int genInProduction = 83741234;
@@ -26,7 +26,7 @@ public class HQ {
 	private static int attackChannel = 8888;
 	private static int ALLIN = 13371337;
 	private static int massAmount = 25;
-	
+
 	private static int rallyXChannel = 629;
 	private static int rallyYChannel = 58239;
 
@@ -37,11 +37,15 @@ public class HQ {
 	private static int soldiercount = 0;
 	private static int othercount = 0;
 
+	private static int optimalBuildings = 0;
+	private static int farAwayButSafeBuildings = 0;
+
+	private static boolean expandPhase = true;
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
 		Direction defaultSpawnDir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-
+		evaluateMap();
 		while(true) 
 		{
 			rc.broadcast(attackChannel, 0);
@@ -109,18 +113,18 @@ public class HQ {
 					rc.broadcast(nukeChannel, opponentNukeHalfDone);
 				}
 			}
-			
+
 			shallWeAllIn();
 
 			rc.setIndicatorString(0, displayString);
 			rc.yield();
 		}
 	}
-	
+
 	private static void shallWeAllIn() throws GameActionException
 	{
 		int massedRobos = 0;
-		
+
 		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
 		for(Robot r : robos)
 		{
@@ -129,14 +133,14 @@ public class HQ {
 				++massedRobos;
 			}
 		}
-		
+
 		if(massedRobos > massAmount) // if we should all in...
 		{
 			rc.broadcast(attackChannel, ALLIN);
 			allInRound = Clock.getRoundNum();
 		}
 	}
-	
+
 	private static MapLocation findRallyPoint()
 	{
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
@@ -145,7 +149,7 @@ public class HQ {
 		int y = (enemyLoc.y + 2 * ourLoc.y) / 3;
 		return new MapLocation(x,y);
 	}
-	
+
 	public static boolean doWeNeedGenerator() throws GameActionException
 	{
 		if(rc.readBroadcast(campChannel) == genInProduction) return false;
@@ -181,33 +185,55 @@ public class HQ {
 		}
 		return false;
 	}
-	
-	public static boolean expandOrRally() throws GameActionException// true for expand
+	public static void evaluateMap() throws GameActionException {
+		MapLocation neutralCamps[] = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
+		MapLocation me = rc.getLocation();
+		MapLocation them = rc.senseEnemyHQLocation();
+		double rushdistance = them.distanceSquaredTo(me);
+
+		for (MapLocation loc : neutralCamps) {
+			double toUs=loc.distanceSquaredTo(me);
+			double toThem = loc.distanceSquaredTo(them);
+			if((toUs/toThem < .81)) {
+				optimalBuildings++;
+				if (rushdistance < toUs)
+					farAwayButSafeBuildings++;
+			}
+		}
+
+	}
+
+	public static void singleExpand() {
+		//TODO - Implement this
+	}
+	public static boolean expandOrRally() throws GameActionException //true for expand
 	{
 		// rush distance
 		//double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
 		// number of encampments
-		int numCamps = rc.senseAllEncampmentSquares().length;
+		
+		if(!expandPhase) { 
+			singleExpand();
+			return false;
+		}
+		
 		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
 
-		if(numAlliedCamps > 12) {
+		
+		if(numAlliedCamps > 13) {
 			rc.broadcast(commandChannel, rallyCommand);
+			expandPhase = false;
 			return false;
 		}
-		if(numCamps < 20 && numAlliedCamps >8) {
+
+		if(numAlliedCamps>=optimalBuildings) {
 			rc.broadcast(commandChannel, rallyCommand);
+			expandPhase = false;
 			return false;
 		} 
-		if(numCamps < 10 && numAlliedCamps >2)  {
-			rc.broadcast(commandChannel, rallyCommand);
-			return false;
-		}
-		else if(numCamps < 40 && numAlliedCamps > numCamps-1/2) {
-			rc.broadcast(commandChannel, rallyCommand);
-			return false;
-		}
+
 		rc.broadcast(commandChannel, expand);
 		return true;
 	}
-	
+
 }
