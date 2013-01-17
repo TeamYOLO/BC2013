@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 public class Soldier
 {
+	private static int rallyRadius = 13;
+	
 	private final static int localScanRange = 14;
 	
 	private static int nukeChannel = 2894;
@@ -13,8 +15,12 @@ public class Soldier
 	private static int gen = 6;
 	private static int genInProduction = 83741234;
 	private static int sup = 0;
-
-	private static int massAmount = 15;
+	
+	private static int attackChannel = 8888;
+	private static int ALLIN = 13371337;
+	
+	private static int rallyXChannel = 629;
+	private static int rallyYChannel = 58239;
 
 	private static boolean localscan = false;
 
@@ -24,7 +30,7 @@ public class Soldier
 	private static int[] self = {2,2};
 	private static int[][] surroundingIndices = new int[5][5];
 
-	public static void soldierCode(RobotController myRC)
+	public static void soldierCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
 		rallyPoint = findRallyPoint();
@@ -56,12 +62,10 @@ public class Soldier
 				}
 				else
 				{
-					/*
 					// enemy spotted
 					MapLocation closestEnemy = findClosestRobot(enemyRobots);
 					smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
 					goToLocation(closestEnemy);
-					 */
 				}
 			}
 			catch (Exception e)
@@ -71,6 +75,11 @@ public class Soldier
 			}
 			rc.yield();
 		}
+	}
+	
+	private static MapLocation findRallyPoint() throws GameActionException
+	{
+		return new MapLocation(rc.readBroadcast(rallyXChannel), rc.readBroadcast(rallyYChannel));
 	}
 	
 	private static int getNumberOfAlliedRobosAfterMe() throws GameActionException
@@ -152,10 +161,9 @@ public class Soldier
 	{
 		rallyPoint = findRallyPoint();
 		// if we are fairly close to the rally point and we have the necessary soldier counts to make up a wave, gogogogogo
-		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 13)
+		if(rc.getLocation().distanceSquaredTo(rallyPoint) < rallyRadius)
 		{
-			int soldierCount = rc.senseNearbyGameObjects(Robot.class, rallyPoint, 25, rc.getTeam()).length;
-			if(soldierCount > massAmount)
+			if(rc.readBroadcast(attackChannel) == ALLIN)
 			{
 				while(true)
 				{
@@ -165,11 +173,7 @@ public class Soldier
 			}
 			else
 			{
-				// perhaps plant a mine?
-				//if (soldierCount + 5 < massAmount)
-				//{
-				//	rc.layMine();
-				//}
+				goToLocation(rallyPoint);
 			}
 		}
 		else 
@@ -195,39 +199,6 @@ public class Soldier
 		return closestEnemy;
 	}
 
-
-	private static MapLocation checkNearbyEncampents(MapLocation location, MapLocation[] AllenCampments) throws GameActionException {
-		int results[][] = new int[5][5];
-		MapLocation result = null;
-		int maxCamps = 0;
-		return result;
-	}
-
-	private static MapLocation checkNearbyEncampentsold(MapLocation location) throws GameActionException {
-		int results[] = new int[9];
-		MapLocation result = null;
-		int maxCamps = 0;
-
-
-		for(Direction d : Direction.values()) {
-			if(d!=Direction.OMNI && rc.senseEncampmentSquare(location.add(d))) {
-				for(Direction d2 : Direction.values() ) {
-					if(rc.senseEncampmentSquare(location.add(d2))) //there is an encampent
-						results[d.ordinal()]++; 
-				}
-			}
-		}
-
-		for(Direction d : Direction.values()) {
-			if(d!=Direction.OMNI && rc.senseEncampmentSquare(location.add(d))) {
-				if(results[d.ordinal()]>maxCamps) {
-					result = location.add(d);
-					maxCamps = results[d.ordinal()];
-				}
-			}
-		}
-		return result;
-	}
 	private static MapLocation findClosestLocation(MapLocation[] locArray) throws GameActionException {
 		int closestDist = 1000000;
 		MapLocation me = rc.getLocation();
@@ -313,15 +284,6 @@ public class Soldier
 		{
 			rc.move(dir);
 		}
-	}
-
-	private static MapLocation findRallyPoint()
-	{
-		MapLocation enemyLoc = rc.senseEnemyHQLocation();
-		MapLocation ourLoc = rc.senseHQLocation();
-		int x = (enemyLoc.x + 2 * ourLoc.x) / 3;
-		int y = (enemyLoc.y + 2 * ourLoc.y) / 3;
-		return new MapLocation(x,y);
 	}
 
 	public static String intListToString(int[] intList)

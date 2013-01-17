@@ -3,6 +3,8 @@ package team235;
 import battlecode.common.*;
 
 public class HQ {
+	
+	private static int rallyRadius = 25;
 
 	private static int nukeChannel = 2894;
 	private static int opponentNukeHalfDone = 56893349;
@@ -12,65 +14,43 @@ public class HQ {
 	private static int genInProduction = 83741234;
 	private static int sup = 0;
 
+	private static int attackChannel = 8888;
+	private static int ALLIN = 13371337;
+	
+	private static int rallyXChannel = 629;
+	private static int rallyYChannel = 58239;
+
 	private static RobotController rc;
-	private static double Eprime [] = new double[10];
-	private static double Eprev = 40;
 	private static double minPowerThreshold = 100; //TODO-findthisvalue
 	private static double minRoundThreshold = 100; //TODO-findthisvalue
 	private static int gencount = 0;
 	private static int soldiercount = 0;
 	private static int othercount = 0;
 
-	private static int prevRoundsOfEnergyDecline = 0;
-	private static boolean researchedFusion = false;
-
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
 		Direction defaultSpawnDir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-		
-		
+
 		while(true) 
 		{
-			/*if(!researchedFusion)
-			{
-				double currentEnergy = rc.getTeamPower();
-				if(currentEnergy < Eprev || currentEnergy < 40)
-				{
-					++prevRoundsOfEnergyDecline;
-				}
-				else
-				{
-					prevRoundsOfEnergyDecline = 0;
-				}
-				Eprev = currentEnergy;
-
-				if(prevRoundsOfEnergyDecline > 7 && currentEnergy < 40)
-				{
-					// begin researching fusion (the energy decay upgrade)
-					while(!rc.hasUpgrade(Upgrade.FUSION))
-					{
-						if(rc.isActive())
-						{
-							rc.researchUpgrade(Upgrade.FUSION);
-							rc.yield();
-						}
-					}
-					researchedFusion = true;
-				}
-			}
-			 */
-			String displayString = "";
+			rc.broadcast(attackChannel, 0);
 			
+			MapLocation rally = findRallyPoint();
+			rc.broadcast(rallyXChannel, rally.x);
+			rc.broadcast(rallyYChannel, rally.y);
+			
+			String displayString = "";
+
 			if (rc.isActive()) 
 			{
 				int readIn = rc.readBroadcast(campChannel);
-				
+
 				if(!doWeNeedGenerator())
 				{
 					rc.broadcast(campChannel, sup);
 					displayString += "sup";
-					
+
 					// Spawn a soldier
 					if (rc.canMove(defaultSpawnDir))
 					{
@@ -95,17 +75,9 @@ public class HQ {
 						rc.broadcast(campChannel, gen);
 						displayString += " gen";
 					}
-					if(!researchedFusion)
+					if(!rc.hasUpgrade(Upgrade.FUSION))
 					{
-						while(!rc.hasUpgrade(Upgrade.FUSION))
-						{
-							if(rc.isActive())
-							{
-								rc.researchUpgrade(Upgrade.FUSION);
-								rc.yield();
-							}
-						}
-						researchedFusion = true;
+						rc.researchUpgrade(Upgrade.FUSION);
 					}
 					else if(!rc.hasUpgrade(Upgrade.DEFUSION))
 					{
@@ -113,7 +85,7 @@ public class HQ {
 					}
 					else
 					{
-						// ??? what to do if we shouldn't be producing troops and already have our vital upgrades?
+						rc.researchUpgrade(Upgrade.NUKE);
 					}
 				}
 			}
@@ -125,15 +97,46 @@ public class HQ {
 					rc.broadcast(nukeChannel, opponentNukeHalfDone);
 				}
 			}
+			
+			shallWeAllIn();
 
 			rc.setIndicatorString(0, displayString);
 			rc.yield();
 		}
 	}
+	
+	private static void shallWeAllIn() throws GameActionException
+	{
+		int massedRobos = 0;
+		
+		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
+		for(Robot r : robos)
+		{
+			if(rc.senseRobotInfo(r).type == RobotType.SOLDIER)
+			{
+				++massedRobos;
+			}
+		}
+		
+		if(massedRobos > 15) // if we should all in...
+		{
+			rc.broadcast(attackChannel, ALLIN);
+		}
+	}
+	
+	private static MapLocation findRallyPoint()
+	{
+		MapLocation enemyLoc = rc.senseEnemyHQLocation();
+		MapLocation ourLoc = rc.senseHQLocation();
+		int x = (enemyLoc.x + 2 * ourLoc.x) / 3;
+		int y = (enemyLoc.y + 2 * ourLoc.y) / 3;
+		return new MapLocation(x,y);
+	}
+	
 	public static boolean doWeNeedGenerator() throws GameActionException
 	{
 		if(rc.readBroadcast(campChannel) == genInProduction) return false;
-		
+
 		if(rc.getTeamPower() < minPowerThreshold && Clock.getRoundNum() > minRoundThreshold)
 		{
 			return true;
@@ -153,7 +156,7 @@ public class HQ {
 		}
 
 		double decay = .8;
-		if(researchedFusion)
+		if(rc.hasUpgrade(Upgrade.FUSION))
 		{
 			decay = .99;
 		}
