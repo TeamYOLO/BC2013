@@ -40,10 +40,11 @@ public class HQ {
 
 	private static int optimalBuildings = 0;
 	private static int farAwayButSafeBuildings = 0;
-	
+
 	private static int powerThreshold =500;
 
 	private static boolean expandPhase = true;
+	
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
@@ -56,10 +57,13 @@ public class HQ {
 			rc.broadcast(rallyXChannel, rally.x);
 			rc.broadcast(rallyYChannel, rally.y);
 			if(expandOrRally())
+			{
 				rc.broadcast(commandChannel, expand);
+			}
 			else
+			{
 				rc.broadcast(commandChannel,rallyCommand);
-			String displayString = "";
+			}
 
 			if (rc.isActive()) 
 			{
@@ -68,10 +72,10 @@ public class HQ {
 				if(!doWeNeedGenerator())
 				{
 					rc.broadcast(campChannel, sup);
-					displayString += "sup";
 
 					// Spawn a soldier
-					if (rc.canMove(defaultSpawnDir) && rc.senseMine(rc.getLocation().add(defaultSpawnDir)) == null)
+					Team defaultScan = rc.senseMine(rc.getLocation().add(defaultSpawnDir));
+					if (rc.canMove(defaultSpawnDir) && (defaultScan == null || defaultScan == rc.getTeam()))
 					{
 						rc.spawn(defaultSpawnDir);
 					}
@@ -79,11 +83,20 @@ public class HQ {
 					{
 						for(Direction d : Direction.values()) // TODO: optimize secondary direction finding
 						{
-							if(rc.canMove(d) && rc.senseMine(rc.getLocation().add(d)) == null)
+							if(d != Direction.OMNI && d != Direction.NONE)
 							{
-								rc.spawn(d);
-								break;
+								Team scan = rc.senseMine(rc.getLocation().add(d));
+								if(rc.canMove(d) && (scan == null || scan == rc.getTeam()))
+								{
+									rc.spawn(d);
+									break;
+								}
 							}
+						}
+						if(rc.isActive())
+						{
+							// if there are no valid spawn directions
+							rc.researchUpgrade(Upgrade.NUKE);
 						}
 					}
 				}
@@ -92,7 +105,6 @@ public class HQ {
 					if(readIn == sup || (readIn != genInProduction && readIn != gen))
 					{
 						rc.broadcast(campChannel, gen);
-						displayString += " gen";
 					}
 					if(!rc.hasUpgrade(Upgrade.FUSION))
 					{
@@ -119,7 +131,6 @@ public class HQ {
 
 			shallWeAllIn();
 
-			rc.setIndicatorString(0, displayString);
 			rc.yield();
 		}
 	}
@@ -207,15 +218,17 @@ public class HQ {
 		}
 	}
 
-	public static void singleExpand() throws GameActionException {
+	public static void singleExpand() throws GameActionException
+	{
 		int numCamps = rc.senseAlliedEncampmentSquares().length;
 		if(numCamps >= optimalBuildings + farAwayButSafeBuildings)
 			return;
-		
-		if(numCamps < optimalBuildings) {
-			
+
+		if(numCamps < optimalBuildings)
+		{
+
 		}
-		
+
 		if(false) { //figure out condition
 			MapLocation expansion = null;
 			expansion = findClosestEmptyCamp();
@@ -224,25 +237,29 @@ public class HQ {
 			rc.broadcast(singleExpandYChannel, expansion.y);
 		}
 	}
+
 	public static boolean expandOrRally() throws GameActionException //true for expand
 	{
 		// rush distance
 		//double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
 		// number of encampments
-		
-		if(!expandPhase) { 
+
+		if(!expandPhase)
+		{ 
 			singleExpand();
 			return false;
 		}
-		
+
 		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
-		if(numAlliedCamps > 13) {
+		if(numAlliedCamps > 13)
+		{
 			rc.broadcast(commandChannel, rallyCommand);
 			expandPhase = false;
 			return false;
 		}
 
-		if(numAlliedCamps>=optimalBuildings) {
+		if(numAlliedCamps>=optimalBuildings)
+		{
 			rc.broadcast(commandChannel, rallyCommand);
 			expandPhase = false;
 			return false;
@@ -251,7 +268,7 @@ public class HQ {
 		rc.broadcast(commandChannel, expand);
 		return true;
 	}
-	
+
 	private static MapLocation findClosestEmptyCamp() throws GameActionException
 	{
 		MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
