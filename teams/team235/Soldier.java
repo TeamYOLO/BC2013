@@ -11,26 +11,6 @@ public class Soldier
 	private final static int localScanRange = 14;
 
 
-	private static int campChannel = 45127;
-	private static int gen = 6;
-	private static int genInProduction = 83741234;
-	private static int sup = 0;
-
-	private static final int attackChannel = 8888;
-	private static final int ALLIN = 13371337;
-
-
-	private static int commandChannel = 12334;
-	private static final int expand = 2;
-	private static final int rally = 3;
-	private static final int buildIndividual = 4;
-
-	private static int singleExpandXChannel = 8472;
-	private static int singleExpandYChannel = 8473;
-
-	private static int rallyXChannel = 629;
-	private static int rallyYChannel = 58239;
-
 	private static boolean localscan = false;
 
 	private static RobotController rc;
@@ -60,13 +40,15 @@ public class Soldier
 				{
 					int command = HQCommand();
 					switch (command) {
-					case expand:
+					case Constants.commandExpand:
 						expand();
 						break;
-					case rally:
+					case Constants.commandRally:
 						rally();
 						break;
-					case buildIndividual: //TODO- implement this
+					case Constants.commandEnemyNukeHalfDone:
+						rally();
+					case Constants.commandBuildIndividual: //TODO- implement this
 						break;
 					}
 				}
@@ -134,7 +116,7 @@ public class Soldier
 
 	private static MapLocation findRallyPoint() throws GameActionException
 	{
-		return new MapLocation(rc.readBroadcast(rallyXChannel), rc.readBroadcast(rallyYChannel));
+		return new MapLocation(rc.readBroadcast(Constants.rallyXChannel), rc.readBroadcast(Constants.rallyYChannel));
 	}
 
 	private static int getNumberOfAlliedRobosAfterMe() throws GameActionException
@@ -176,17 +158,17 @@ public class Soldier
 			{
 				if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
 				{
-					int readIn = rc.readBroadcast(campChannel);
-					if(readIn == gen)
+					int readIn = rc.readBroadcast(Constants.campChannel);
+					if(readIn == Constants.campGen)
 					{
-						rc.broadcast(campChannel, genInProduction);
+						rc.broadcast(Constants.campChannel, Constants.campGenInProduction);
 						rc.captureEncampment(RobotType.GENERATOR);
 					}
-					else if(readIn == genInProduction)
+					else if(readIn == Constants.campGenInProduction)
 					{
 						rc.captureEncampment(RobotType.SUPPLIER);
 					}
-					else if(readIn == sup)
+					else if(readIn == Constants.campSupplier)
 					{ 
 						rc.captureEncampment(RobotType.SUPPLIER);
 					}
@@ -218,7 +200,7 @@ public class Soldier
 		// if we are fairly close to the rally point and we have the necessary soldier counts to make up a wave, gogogogogo
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < rallyRadius)
 		{
-			if(rc.readBroadcast(attackChannel) == ALLIN)
+			if(rc.readBroadcast(Constants.attackChannel) == Constants.attackAllIn)
 			{
 				while(true)
 				{
@@ -502,13 +484,13 @@ public class Soldier
 
 	public static int HQCommand() throws GameActionException // true for expand
 	{
-		return rc.readBroadcast(commandChannel);
+		return rc.readBroadcast(Constants.commandChannel);
 	}
 
 	public static void expandIndividual() throws GameActionException
 	{
-		MapLocation expandLocation = new MapLocation(rc.readBroadcast(singleExpandXChannel),rc.readBroadcast(singleExpandYChannel));
-		rc.broadcast(commandChannel, rally);
+		MapLocation expandLocation = new MapLocation(rc.readBroadcast(Constants.singleExpandXChannel),rc.readBroadcast(Constants.singleExpandYChannel));
+		rc.broadcast(Constants.commandChannel, Constants.commandRally);
 		while(true) {
 			if(rc.getLocation().distanceSquaredTo(expandLocation) < 1) // if we are at the location of the rally point
 			{
@@ -516,17 +498,17 @@ public class Soldier
 				{
 					if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
 					{
-						int readIn = rc.readBroadcast(campChannel);
-						if(readIn == gen)
+						int readIn = rc.readBroadcast(Constants.campChannel);
+						if(readIn == Constants.campGen)
 						{
-							rc.broadcast(campChannel, genInProduction);
+							rc.broadcast(Constants.campChannel, Constants.campGenInProduction);
 							rc.captureEncampment(RobotType.GENERATOR);
 						}
-						else if(readIn == genInProduction)
+						else if(readIn == Constants.campGenInProduction)
 						{
 							rc.captureEncampment(RobotType.SUPPLIER);
 						}
-						else if(readIn == sup)
+						else if(readIn == Constants.campSupplier)
 						{ 
 							rc.captureEncampment(RobotType.SUPPLIER);
 						}

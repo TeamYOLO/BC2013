@@ -7,29 +7,7 @@ public class HQ {
 
 	private static int rallyRadius = 33;
 
-	private static int nukeChannel = 2894;
-	private static int opponentNukeHalfDone = 56893349;
-
-	private static int commandChannel = 12334;
-	private static int expand = 2;
-	private static int rallyCommand = 3;
-	private static int buildIndividual = 4;
-
-	private static int singleExpandXChannel = 8472;
-	private static int singleExpandYChannel = 8473;
-
-
-	private static int campChannel = 45127;
-	private static int gen = 6;
-	private static int genInProduction = 83741234;
-	private static int sup = 0;
-
-	private static int attackChannel = 8888;
-	private static int ALLIN = 13371337;
 	private static int massAmount = 25;
-
-	private static int rallyXChannel = 629;
-	private static int rallyYChannel = 58239;
 
 	private static RobotController rc;
 	private static double minPowerThreshold = 100; //TODO-findthisvalue
@@ -52,26 +30,26 @@ public class HQ {
 		evaluateMap();
 		while(true) 
 		{
-			rc.broadcast(attackChannel, 0);
+			rc.broadcast(Constants.attackChannel, 0);
 			MapLocation rally = findRallyPoint();
-			rc.broadcast(rallyXChannel, rally.x);
-			rc.broadcast(rallyYChannel, rally.y);
+			rc.broadcast(Constants.rallyXChannel, rally.x);
+			rc.broadcast(Constants.rallyYChannel, rally.y);
 			if(expandOrRally())
 			{
-				rc.broadcast(commandChannel, expand);
+				rc.broadcast(Constants.commandChannel, Constants.commandExpand);
 			}
 			else
 			{
-				rc.broadcast(commandChannel,rallyCommand);
+				rc.broadcast(Constants.commandChannel,Constants.commandRally);
 			}
 
 			if (rc.isActive()) 
 			{
-				int readIn = rc.readBroadcast(campChannel);
+				int readIn = rc.readBroadcast(Constants.campChannel);
 
 				if(!doWeNeedGenerator())
 				{
-					rc.broadcast(campChannel, sup);
+					rc.broadcast(Constants.campChannel, Constants.campSupplier);
 
 					// Spawn a soldier
 					Team defaultScan = rc.senseMine(rc.getLocation().add(defaultSpawnDir));
@@ -102,9 +80,9 @@ public class HQ {
 				}
 				else // we do need a generator
 				{
-					if(readIn == sup || (readIn != genInProduction && readIn != gen))
+					if(readIn == Constants.campSupplier || (readIn != Constants.campGenInProduction && readIn != Constants.campGen))
 					{
-						rc.broadcast(campChannel, gen);
+						rc.broadcast(Constants.campChannel, Constants.campGen);
 					}
 					if(!rc.hasUpgrade(Upgrade.FUSION))
 					{
@@ -125,7 +103,7 @@ public class HQ {
 			{
 				if(rc.senseEnemyNukeHalfDone())
 				{
-					rc.broadcast(nukeChannel, opponentNukeHalfDone);
+					rc.broadcast(Constants.commandChannel, Constants.commandEnemyNukeHalfDone);
 				}
 			}
 
@@ -150,7 +128,7 @@ public class HQ {
 
 		if(massedRobos > massAmount) // if we should all in...
 		{
-			rc.broadcast(attackChannel, ALLIN);
+			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 			allInRound = Clock.getRoundNum();
 		}
 	}
@@ -166,9 +144,9 @@ public class HQ {
 
 	public static boolean doWeNeedGenerator() throws GameActionException
 	{
-		if(rc.readBroadcast(campChannel) == genInProduction) return false;
+		if(rc.readBroadcast(Constants.campChannel) == Constants.campGenInProduction) return false;
 		if(Clock.getRoundNum() - allInRound < 80) return false;
-		if(rc.readBroadcast(commandChannel) == rallyCommand && rc.getTeamPower()>powerThreshold) return false;
+		if(rc.readBroadcast(Constants.commandChannel) == Constants.commandRally && rc.getTeamPower()>powerThreshold) return false;
 
 		if(rc.getTeamPower() < minPowerThreshold && Clock.getRoundNum() > minRoundThreshold)
 		{
@@ -232,9 +210,9 @@ public class HQ {
 		if(false) { //figure out condition
 			MapLocation expansion = null;
 			expansion = findClosestEmptyCamp();
-			rc.broadcast(commandChannel, buildIndividual);
-			rc.broadcast(singleExpandXChannel, expansion.x);
-			rc.broadcast(singleExpandYChannel, expansion.y);
+			rc.broadcast(Constants.commandChannel, Constants.commandBuildIndividual);
+			rc.broadcast(Constants.singleExpandXChannel, expansion.x);
+			rc.broadcast(Constants.singleExpandYChannel, expansion.y);
 		}
 	}
 
@@ -253,19 +231,19 @@ public class HQ {
 		int numAlliedCamps = rc.senseAlliedEncampmentSquares().length;
 		if(numAlliedCamps > 13)
 		{
-			rc.broadcast(commandChannel, rallyCommand);
+			rc.broadcast(Constants.commandChannel, Constants.commandRally);
 			expandPhase = false;
 			return false;
 		}
 
 		if(numAlliedCamps>=optimalBuildings)
 		{
-			rc.broadcast(commandChannel, rallyCommand);
+			rc.broadcast(Constants.commandChannel, Constants.commandRally);
 			expandPhase = false;
 			return false;
 		} 
 
-		rc.broadcast(commandChannel, expand);
+		rc.broadcast(Constants.commandChannel, Constants.commandExpand);
 		return true;
 	}
 
