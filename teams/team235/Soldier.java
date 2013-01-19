@@ -1,5 +1,7 @@
 package team235; // test
 
+import java.util.ArrayList;
+
 import battlecode.common.*;
 
 public class Soldier
@@ -36,6 +38,8 @@ public class Soldier
 	private static int[][] neighborArray;
 	private static int[] self = {2,2};
 	private static int[][] surroundingIndices = new int[5][5];
+	
+	private static int[][] grandNeighborArray;
 
 	public static void soldierCode(RobotController myRC) throws GameActionException
 	{
@@ -46,8 +50,13 @@ public class Soldier
 		{
 			try
 			{
+				// returns all enemy robots within our sight range (aka that we can actually fight right now or very soon)
+				Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
+				
+				// returns all enemy robots reasonably close to us (aka that we should move toward and potentially assist our allies in fighting)
+				
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,63,rc.getTeam().opponent());
-				if(enemyRobots.length==0) // no enemies are nearby
+				if(closeEnemyRobots.length == 0 && enemyRobots.length == 0) // no enemies are nearby
 				{
 					int command = HQCommand();
 					switch (command) {
@@ -63,6 +72,16 @@ public class Soldier
 				}
 				else
 				{
+					localscan = false;
+					if(closeEnemyRobots.length == 0)
+					{
+						// TODO: move to reinforce since there are no robos right by us
+						
+					}
+					else
+					{						
+						getMove();
+					}
 					// enemy spotted
 					localscan = false;
 					MapLocation closestEnemy = findClosestRobot(enemyRobots);
@@ -76,6 +95,34 @@ public class Soldier
 				e.printStackTrace();
 			}
 			rc.yield();
+		}
+	}
+	
+	private static void getMove()
+	{
+		// micro code, for now only take engagements that are even or better
+		
+		ArrayList<Direction> possibleMoves = new ArrayList<Direction>();
+		
+		// enemies within sight range: closeEnemyRobots
+		Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
+		
+		// allies who may help us with this engagement:
+		Robot[] closeAlliedRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam());
+		
+		// possible directions that can be moved
+		for(Direction d: Direction.values())
+		{
+			if(d != Direction.OMNI && rc.canMove(d))
+			{
+				possibleMoves.add(d);
+			}
+		}
+		
+		for(Direction d : possibleMoves)
+		{
+			int attackableRobos = 0;
+			
 		}
 	}
 
@@ -297,6 +344,12 @@ public class Soldier
 		}
 		return sofar;
 	}
+	
+	private static void reallySmartCountNeighbors() throws GameActionException
+	{
+		// build ze 7x7 array of neighboring units
+		grandNeighborArray = populate7x7neighbors();
+	}
 
 	// ARRAY-BASED NEIGHBOR DETECTION
 	private static void smartCountNeighbors(Robot[] enemyRobots, MapLocation closestEnemy) throws GameActionException
@@ -313,7 +366,7 @@ public class Soldier
 		//TODO: Now act on that data. I leave this to you. 
 	}
 
-	public static int[] locToIndex(MapLocation ref, MapLocation test,int offset) // 40 bytecodes??
+	public static int[] locToIndex(MapLocation ref, MapLocation test, int offset) // 40 bytecodes??
 	{
 		int[] index = new int[2];
 		index[0] = test.y-ref.y+offset;
@@ -345,6 +398,24 @@ public class Soldier
 			}
 		}
 		return outstr;
+	}
+	
+	private static int[][] populate7x7neighbors() throws GameActionException
+	{
+		int[][] array = new int[7][7];
+		MapLocation myLoc = rc.getLocation();
+		Robot[] closeRobos = rc.senseNearbyGameObjects(Robot.class, 14);
+		
+		for(Robot aRobot : closeRobos)
+		{
+			RobotInfo info = rc.senseRobotInfo(aRobot);
+			int[] index = locToIndex(myLoc, info.location, 3);
+			if(index[0] >= 0 && index[0] <= 6 && index[1] >= 0 && index[1] <= 6)
+			{
+				array[index[0]][index[1]] = info.team == rc.getTeam() ? 100 : -100;
+			}
+		}
+		return array;
 	}
 
 	public static int[][] populateNeighbors(int[][] array) throws GameActionException // 788
