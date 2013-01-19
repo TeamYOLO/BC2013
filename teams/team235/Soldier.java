@@ -54,8 +54,8 @@ public class Soldier
 				Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
 				
 				// returns all enemy robots reasonably close to us (aka that we should move toward and potentially assist our allies in fighting)
-				
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,63,rc.getTeam().opponent());
+				
 				if(closeEnemyRobots.length == 0 && enemyRobots.length == 0) // no enemies are nearby
 				{
 					int command = HQCommand();
@@ -80,13 +80,14 @@ public class Soldier
 					}
 					else
 					{						
-						getMove();
+						Direction toGo = getMove();
+						goToLocation(rc.getLocation().add(toGo));
 					}
 					// enemy spotted
-					localscan = false;
-					MapLocation closestEnemy = findClosestRobot(enemyRobots);
-					smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
-					goToLocation(closestEnemy);
+					//localscan = false;
+					//MapLocation closestEnemy = findClosestRobot(enemyRobots);
+					//smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
+					//goToLocation(closestEnemy);
 				}
 			}
 			catch (Exception e)
@@ -98,9 +99,12 @@ public class Soldier
 		}
 	}
 	
-	private static void getMove()
+	private static Direction getMove() throws GameActionException
 	{
 		// micro code, for now only take engagements that are even or better
+		
+		grandNeighborArray = populate7x7neighbors();
+		rc.setIndicatorString(0, bigArrayToString(grandNeighborArray));
 		
 		ArrayList<Direction> possibleMoves = new ArrayList<Direction>();
 		
@@ -113,17 +117,19 @@ public class Soldier
 		// possible directions that can be moved
 		for(Direction d: Direction.values())
 		{
-			if(d != Direction.OMNI && rc.canMove(d))
+			if(d != Direction.OMNI && d != Direction.NONE && rc.canMove(d))
 			{
 				possibleMoves.add(d);
 			}
 		}
+		possibleMoves.add(Direction.NONE);
 		
 		for(Direction d : possibleMoves)
 		{
 			int attackableRobos = 0;
 			
 		}
+		return possibleMoves.get(0);
 	}
 
 	private static MapLocation findRallyPoint() throws GameActionException
@@ -393,6 +399,20 @@ public class Soldier
 		{
 			outstr = outstr + "; ";
 			for(int j = 0; j < 5; j++)
+			{
+				outstr = outstr+array[i][j] + " ";
+			}
+		}
+		return outstr;
+	}
+	
+	public static String bigArrayToString(int[][] array)
+	{
+		String outstr = "";
+		for(int i = 0; i < 7; i++)
+		{
+			outstr = outstr + "; ";
+			for(int j = 0; j < 7; j++)
 			{
 				outstr = outstr+array[i][j] + " ";
 			}
