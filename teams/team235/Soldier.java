@@ -23,10 +23,10 @@ public class Soldier
 			{
 				// returns all enemy robots within our sight range (aka that we can actually fight right now or very soon)
 				Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
-				
+
 				// returns all enemy robots reasonably close to us (aka that we should move toward and potentially assist our allies in fighting)
 				Robot[] enemyRobots = rc.senseNearbyGameObjects(Robot.class,63,rc.getTeam().opponent());
-				
+
 				if(closeEnemyRobots.length == 0 && enemyRobots.length == 0) // no enemies are nearby
 				{
 					int command = HQCommand();
@@ -60,7 +60,7 @@ public class Soldier
 			rc.yield();
 		}
 	}
-	
+
 
 	private static MapLocation findRallyPoint() throws GameActionException
 	{
@@ -135,26 +135,26 @@ public class Soldier
 							break;
 						}
 					}
-					
-					
-//					readIn = rc.readBroadcast(Constants.campChannel);
-//					if(readIn == Constants.campGen)
-//					{
-//						rc.broadcast(Constants.campChannel, Constants.campGenInProduction);
-//						rc.captureEncampment(RobotType.GENERATOR);
-//					}
-//					else if(readIn == Constants.campGenInProduction)
-//					{
-//						rc.captureEncampment(RobotType.SUPPLIER);
-//					}
-//					else if(readIn == Constants.campSupplier)
-//					{ 
-//						rc.captureEncampment(RobotType.SUPPLIER);
-//					}
-//					else // TODO: transmissions may be being scrambled, for now just make supplier
-//					{
-//						rc.captureEncampment(RobotType.SUPPLIER);
-//					}
+
+
+					//					readIn = rc.readBroadcast(Constants.campChannel);
+					//					if(readIn == Constants.campGen)
+					//					{
+					//						rc.broadcast(Constants.campChannel, Constants.campGenInProduction);
+					//						rc.captureEncampment(RobotType.GENERATOR);
+					//					}
+					//					else if(readIn == Constants.campGenInProduction)
+					//					{
+					//						rc.captureEncampment(RobotType.SUPPLIER);
+					//					}
+					//					else if(readIn == Constants.campSupplier)
+					//					{ 
+					//						rc.captureEncampment(RobotType.SUPPLIER);
+					//					}
+					//					else // TODO: transmissions may be being scrambled, for now just make supplier
+					//					{
+					//						rc.captureEncampment(RobotType.SUPPLIER);
+					//					}
 				}
 			}
 		}
@@ -288,24 +288,36 @@ public class Soldier
 				lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently))
 				{
-					moveOrDefuse(lookingAtCurrently);
-					break;
+					boolean lol = moveOrDefuse(lookingAtCurrently);
+					if(lol) break;
 				}
 			}
 		}
 	}
 
-	private static void moveOrDefuse(Direction dir) throws GameActionException
+	private static boolean moveOrDefuse(Direction dir) throws GameActionException // true means we moved or are defusing
 	{
+		boolean retval = false;
 		MapLocation ahead = rc.getLocation().add(dir);
-		if(rc.senseMine(ahead) != null)
+		Team miney = rc.senseMine(ahead);
+		if(miney == Team.NEUTRAL || miney == rc.getTeam().opponent())
 		{
-			rc.defuseMine(ahead);
+			if(rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent()).length == 0)
+			{
+				rc.defuseMine(ahead);
+				retval = true;
+			}
+			else
+			{
+				retval = false;
+			}
 		}
 		else
 		{
 			rc.move(dir);
+			retval = true;
 		}
+		return retval;
 	}
 
 	public static int HQCommand() throws GameActionException // true for expand
