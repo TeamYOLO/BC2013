@@ -120,8 +120,8 @@ public class HQ {
 						if(rc.isActive())
 						{
 							rc.researchUpgrade(Upgrade.DEFUSION);
-							rc.yield();
 						}
+						rc.yield();
 					}
 				}
 			}
