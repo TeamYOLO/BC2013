@@ -41,6 +41,10 @@ public class HQ {
 			{
 				rc.broadcast(Constants.commandChannel, Constants.commandExpand);
 				broadcastUpdatedBuildOrder();
+				
+				MapLocation rally = findRallyPoint();
+				rc.broadcast(Constants.rallyXChannel, rally.x);
+				rc.broadcast(Constants.rallyYChannel, rally.y);
 			}
 			else
 			{
@@ -111,6 +115,14 @@ public class HQ {
 				if(rc.senseEnemyNukeHalfDone())
 				{
 					rc.broadcast(Constants.commandChannel, Constants.commandEnemyNukeHalfDone);
+					while(!rc.hasUpgrade(Upgrade.DEFUSION))
+					{
+						if(rc.isActive())
+						{
+							rc.researchUpgrade(Upgrade.DEFUSION);
+							rc.yield();
+						}
+					}
 				}
 			}
 
@@ -153,8 +165,15 @@ public class HQ {
 
 	private static void shallWeAllIn() throws GameActionException
 	{
+		if(rc.senseEnemyNukeHalfDone() && Clock.getRoundNum() < 300)
+		{
+			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
+			return;
+		}
 		int massedRobos = 0;
-		double massedAmountNeeded = .7*(40 + (10 * gencount) - (1 * othercount));
+		double massedAmountNeeded = .5*(40 + (10 * gencount) - (1 * othercount));
+		if(rc.senseEnemyNukeHalfDone()) massedAmountNeeded -= 10;
+		
 		int rallyRadius = 33;
 		if(massedAmountNeeded > 50) rallyRadius = 63;
 

@@ -300,7 +300,7 @@ public class Soldier
 		boolean retval = false;
 		MapLocation ahead = rc.getLocation().add(dir);
 		Team miney = rc.senseMine(ahead);
-		if(miney == Team.NEUTRAL || miney == rc.getTeam().opponent())
+		if(miney == Team.NEUTRAL)
 		{
 			if(rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent()).length == 0)
 			{
@@ -311,6 +311,11 @@ public class Soldier
 			{
 				retval = false;
 			}
+		}
+		else if(miney == rc.getTeam().opponent())
+		{
+			rc.defuseMine(ahead);
+			retval = true;
 		}
 		else
 		{
