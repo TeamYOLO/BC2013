@@ -107,7 +107,6 @@ public class Soldier
 				if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
 				{
 					int readIn=0;
-					
 					for(int i = Constants.buildOrderBeginChannel ; i <= Constants.buildOrderEndChannel; i++) {
 						readIn=rc.readBroadcast(i);
 						if(readIn==Constants.buildOrderGen) {

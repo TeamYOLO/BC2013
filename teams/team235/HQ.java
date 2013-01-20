@@ -131,7 +131,7 @@ public class HQ {
 		for(int i = 0; i < buildOrder.length; i++)
 		{
 			int tmp = rc.readBroadcast(Constants.buildOrderBeginChannel + i);
-			if(tmp != 0 || tmp != Constants.buildOrderArt || tmp != Constants.buildOrderGen || tmp != Constants.buildOrderSup || tmp != Constants.buildOrderHeal || tmp != Constants.buildOrderShield)
+			if(!(tmp == 0 || tmp == Constants.buildOrderArt || tmp == Constants.buildOrderGen || tmp == Constants.buildOrderSup || tmp == Constants.buildOrderHeal || tmp == Constants.buildOrderShield))
 			{
 				scrambledEggs = true;
 				break;
@@ -143,6 +143,7 @@ public class HQ {
 			for(int i = 0; i < buildOrder.length; i++)
 			{
 				buildOrder[i] = rc.readBroadcast(Constants.buildOrderBeginChannel + i);
+				
 			}
 		}
 		else
