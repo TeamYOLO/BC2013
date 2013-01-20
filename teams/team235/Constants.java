@@ -1,6 +1,7 @@
 package team235;
 
-public class Constants {
+public class Constants 
+{
 	private Constants() { }  // Prevents instantiation
 
 	public static final int campChannel   = 99;
@@ -23,5 +24,8 @@ public class Constants {
 	public static final int rallyXChannel = 104;
 	public static final int rallyYChannel = 105;
 	
-		
+	public static final int buildOrderBeginChannel = 10111;
+	public static final int buildOrderEndChannel = 10131;
+	public static final int buildOrderSup = 55;
+	public static final int buildOrderGen = 101;
 }

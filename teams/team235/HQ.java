@@ -117,7 +117,7 @@ public class HQ {
 			}
 
 			shallWeAllIn();
-
+			rc.setIndicatorString(0, expandPhase + "");
 			rc.yield();
 		}
 	}

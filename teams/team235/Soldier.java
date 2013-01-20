@@ -8,7 +8,6 @@ public class Soldier
 
 	private final static int localScanRange = 14;
 
-
 	private static boolean localscan = false;
 
 	private static RobotController rc;
