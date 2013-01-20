@@ -108,7 +108,7 @@ public class Soldier
 				{
 					int readIn=0;
 					
-					for(int i = Constants.buildOrderBeginChannel ; i < Constants.buildOrderEndChannel; i++) {
+					for(int i = Constants.buildOrderBeginChannel ; i <= Constants.buildOrderEndChannel; i++) {
 						readIn=rc.readBroadcast(i);
 						if(readIn==Constants.buildOrderGen) {
 							rc.broadcast(i, 0);

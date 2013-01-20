@@ -22,14 +22,14 @@ public class HQ {
 	private static int powerThreshold =500;
 
 	private static boolean expandPhase = true;
-	
+
 	private static Robot[] alliedRobots;
 	private static Robot[] enemyRobots;
-	
+
 	private static int[] buildOrder;
-	
+
 	private static int rushDistance;
-	
+
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
@@ -123,10 +123,35 @@ public class HQ {
 			rc.yield();
 		}
 	}
-	
+
 	private static void broadcastUpdatedBuildOrder() throws GameActionException
 	{
-		
+		boolean scrambledEggs = false;
+		//scramble check
+		for(int i = 0; i < buildOrder.length; i++)
+		{
+			int tmp = rc.readBroadcast(Constants.buildOrderBeginChannel + i);
+			if(tmp != 0 || tmp != Constants.buildOrderArt || tmp != Constants.buildOrderGen || tmp != Constants.buildOrderSup || tmp != Constants.buildOrderHeal || tmp != Constants.buildOrderShield)
+			{
+				scrambledEggs = true;
+				break;
+			}
+		}
+
+		if(!scrambledEggs)
+		{
+			for(int i = 0; i < buildOrder.length; i++)
+			{
+				buildOrder[i] = rc.readBroadcast(Constants.buildOrderBeginChannel + i);
+			}
+		}
+		else
+		{
+			for(int i = 0; i < buildOrder.length; i++)
+			{
+				rc.broadcast(Constants.buildOrderBeginChannel + i, buildOrder[i]);
+			}
+		}
 	}
 
 	private static void shallWeAllIn() throws GameActionException
@@ -151,15 +176,15 @@ public class HQ {
 
 	private static MapLocation findRallyPoint() throws GameActionException
 	{
-		
+
 		MapLocation closestEnemy = null;
 		closestEnemy = Util.findClosestRobot(rc, enemyRobots);
 		if(closestEnemy != null && closestEnemy.distanceSquaredTo(rc.getLocation()) < rushDistance*.2) {
 			return closestEnemy;
 		}
-		
-		
-		
+
+
+
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
 		int x = (enemyLoc.x + 2 * ourLoc.x) / 3;
@@ -220,12 +245,13 @@ public class HQ {
 				else farAwayButSafeBuildings++;
 			}
 		}
-		
+
 		buildOrder = new int[optimalBuildings];
-		
+
 		for(int i = 0; i < optimalBuildings; i++)
 		{
 			buildOrder[i] = (i+1) % 3 == 0 ? Constants.buildOrderGen : Constants.buildOrderSup;
+			rc.broadcast(Constants.buildOrderBeginChannel + i, buildOrder[i]);
 		}
 	}
 
