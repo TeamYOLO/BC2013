@@ -26,6 +26,8 @@ public class HQ {
 	private static Robot[] alliedRobots;
 	private static Robot[] enemyRobots;
 	
+	private static int[] buildOrder;
+	
 	private static int rushDistance;
 	
 	public static void hqCode(RobotController myRC) throws GameActionException
@@ -39,10 +41,10 @@ public class HQ {
 			alliedRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
 			enemyRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam().opponent());
 
-			
 			if(expandOrRally())
 			{
 				rc.broadcast(Constants.commandChannel, Constants.commandExpand);
+				broadcastUpdatedBuildOrder();
 			}
 			else
 			{
@@ -121,6 +123,11 @@ public class HQ {
 			rc.yield();
 		}
 	}
+	
+	private static void broadcastUpdatedBuildOrder() throws GameActionException
+	{
+		
+	}
 
 	private static void shallWeAllIn() throws GameActionException
 	{
@@ -196,7 +203,8 @@ public class HQ {
 		}
 		return false;
 	}
-	public static void evaluateMap() throws GameActionException {
+	public static void evaluateMap() throws GameActionException 
+	{
 		MapLocation neutralCamps[] = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
 		MapLocation me = rc.getLocation();
 		MapLocation them = rc.senseEnemyHQLocation();
@@ -211,6 +219,13 @@ public class HQ {
 					optimalBuildings++;
 				else farAwayButSafeBuildings++;
 			}
+		}
+		
+		buildOrder = new int[optimalBuildings];
+		
+		for(int i = 0; i < optimalBuildings; i++)
+		{
+			buildOrder[i] = (i+1) % 3 == 0 ? Constants.buildOrderGen : Constants.buildOrderSup;
 		}
 	}
 

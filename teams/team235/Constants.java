@@ -28,4 +28,7 @@ public class Constants
 	public static final int buildOrderEndChannel = 10131;
 	public static final int buildOrderSup = 55;
 	public static final int buildOrderGen = 101;
+	public static final int buildOrderShield = 7777;
+	public static final int buildOrderHeal = 93;
+	public static final int buildOrderArt = 911;
 }
