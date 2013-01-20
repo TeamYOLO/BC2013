@@ -106,24 +106,56 @@ public class Soldier
 			{
 				if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
 				{
-					int readIn = rc.readBroadcast(Constants.campChannel);
-					if(readIn == Constants.campGen)
-					{
-						rc.broadcast(Constants.campChannel, Constants.campGenInProduction);
-						rc.captureEncampment(RobotType.GENERATOR);
+					int readIn=0;
+					
+					for(int i = Constants.buildOrderBeginChannel ; i < Constants.buildOrderEndChannel; i++) {
+						readIn=rc.readBroadcast(i);
+						if(readIn==Constants.buildOrderGen) {
+							rc.broadcast(i, 0);
+							rc.captureEncampment(RobotType.GENERATOR);
+							break;
+						}
+						else if(readIn==Constants.buildOrderSup) {
+							rc.broadcast(i, 0);
+							rc.captureEncampment(RobotType.SUPPLIER);
+							break;
+						}
+						else if(readIn==Constants.buildOrderShield) {
+							rc.broadcast(i, 0);
+							rc.captureEncampment(RobotType.SHIELDS);
+							break;
+						}
+						else if(readIn==Constants.buildOrderHeal) {
+							rc.broadcast(i, 0);
+							rc.captureEncampment(RobotType.MEDBAY);
+							break;
+						}
+						else if(readIn==Constants.buildOrderArt) {
+							rc.broadcast(i, 0);
+							rc.captureEncampment(RobotType.ARTILLERY);
+							break;
+						}
 					}
-					else if(readIn == Constants.campGenInProduction)
-					{
-						rc.captureEncampment(RobotType.SUPPLIER);
-					}
-					else if(readIn == Constants.campSupplier)
-					{ 
-						rc.captureEncampment(RobotType.SUPPLIER);
-					}
-					else // TODO: transmissions may be being scrambled, for now just make supplier
-					{
-						rc.captureEncampment(RobotType.SUPPLIER);
-					}
+					
+					
+//					readIn = rc.readBroadcast(Constants.campChannel);
+//					if(readIn == Constants.campGen)
+//					{
+//						rc.broadcast(Constants.campChannel, Constants.campGenInProduction);
+//						rc.captureEncampment(RobotType.GENERATOR);
+//					}
+//					else if(readIn == Constants.campGenInProduction)
+//					{
+//						rc.captureEncampment(RobotType.SUPPLIER);
+//					}
+//					else if(readIn == Constants.campSupplier)
+//					{ 
+//						rc.captureEncampment(RobotType.SUPPLIER);
+//					}
+//					else // TODO: transmissions may be being scrambled, for now just make supplier
+//					{
+//						rc.captureEncampment(RobotType.SUPPLIER);
+//					}
 				}
 			}
 		}
