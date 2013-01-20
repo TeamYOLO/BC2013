@@ -3,7 +3,7 @@ package team235;
 public class Constants {
 	private Constants() { }  // Prevents instantiation
 
-	public static final int campChannel   = 45127;
+	public static final int campChannel   = 99;
 	public static final int campGen = 1;
 	public static final int campGenInProduction = 2;
 	public static final int campSupplier = 0;
@@ -22,5 +22,6 @@ public class Constants {
 	
 	public static final int rallyXChannel = 104;
 	public static final int rallyYChannel = 105;
+	
 		
 }

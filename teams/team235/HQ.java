@@ -23,6 +23,11 @@ public class HQ {
 
 	private static boolean expandPhase = true;
 	
+	private static Robot[] alliedRobots;
+	private static Robot[] enemyRobots;
+	
+	private static int rushDistance;
+	
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
@@ -31,15 +36,19 @@ public class HQ {
 		while(true) 
 		{
 			rc.broadcast(Constants.attackChannel, 0);
-			MapLocation rally = findRallyPoint();
-			rc.broadcast(Constants.rallyXChannel, rally.x);
-			rc.broadcast(Constants.rallyYChannel, rally.y);
+			alliedRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
+			enemyRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam().opponent());
+
+			
 			if(expandOrRally())
 			{
 				rc.broadcast(Constants.commandChannel, Constants.commandExpand);
 			}
 			else
 			{
+				MapLocation rally = findRallyPoint();
+				rc.broadcast(Constants.rallyXChannel, rally.x);
+				rc.broadcast(Constants.rallyYChannel, rally.y);
 				rc.broadcast(Constants.commandChannel,Constants.commandRally);
 			}
 
@@ -126,15 +135,24 @@ public class HQ {
 			}
 		}
 
-		if(massedRobos > massAmount) // if we should all in...
+		if(massedRobos > .8*(40 + (10 * gencount) - (1 * othercount))) // if we should all in...
 		{
 			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 			allInRound = Clock.getRoundNum();
 		}
 	}
 
-	private static MapLocation findRallyPoint()
+	private static MapLocation findRallyPoint() throws GameActionException
 	{
+		
+		MapLocation closestEnemy = null;
+		closestEnemy = Util.findClosestRobot(rc, enemyRobots);
+		if(closestEnemy != null && closestEnemy.distanceSquaredTo(rc.getLocation()) < rushDistance*.2) {
+			return closestEnemy;
+		}
+		
+		
+		
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
 		int x = (enemyLoc.x + 2 * ourLoc.x) / 3;
@@ -182,14 +200,14 @@ public class HQ {
 		MapLocation neutralCamps[] = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
 		MapLocation me = rc.getLocation();
 		MapLocation them = rc.senseEnemyHQLocation();
-		double rushdistance = them.distanceSquaredTo(me);
+		rushDistance = them.distanceSquaredTo(me);
 
 		for (MapLocation loc : neutralCamps) {
 			double toUs=loc.distanceSquaredTo(me);
 			double toThem = loc.distanceSquaredTo(them);			
 			if(toUs/toThem < .81)
 			{
-				if(rushdistance > toUs)
+				if(rushDistance > toUs)
 					optimalBuildings++;
 				else farAwayButSafeBuildings++;
 			}

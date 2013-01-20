@@ -1,7 +1,5 @@
 package team235; // test
 
-import java.util.ArrayList;
-
 import battlecode.common.*;
 
 public class Soldier
@@ -15,17 +13,11 @@ public class Soldier
 
 	private static RobotController rc;
 	private static MapLocation rallyPoint;
-	private static int[][] neighborArray;
-	private static int[] self = {2,2};
-	private static int[][] surroundingIndices = new int[5][5];
-	
-	private static int[][] grandNeighborArray;
 
 	public static void soldierCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
 		rallyPoint = findRallyPoint();
-		surroundingIndices = initSurroundingIndices(Direction.NORTH);
 		while(true)
 		{
 			try
@@ -54,22 +46,11 @@ public class Soldier
 				}
 				else
 				{
-					localscan = false;
-					if(closeEnemyRobots.length == 0)
-					{
-						// TODO: move to reinforce since there are no robos right by us
-						
-					}
-					else
-					{						
-						Direction toGo = getMove();
-						goToLocation(rc.getLocation().add(toGo));
-					}
+
 					// enemy spotted
-					//localscan = false;
-					//MapLocation closestEnemy = findClosestRobot(enemyRobots);
-					//smartCountNeighbors(enemyRobots,closestEnemy); // TODO: USE THIS!!!!!!
-					//goToLocation(closestEnemy);
+					localscan = false;
+					MapLocation closestEnemy = findClosestRobot(enemyRobots);
+					goToLocation(closestEnemy);
 				}
 			}
 			catch (Exception e)
@@ -81,38 +62,6 @@ public class Soldier
 		}
 	}
 	
-	private static Direction getMove() throws GameActionException
-	{
-		// micro code, for now only take engagements that are even or better
-		
-		grandNeighborArray = populate7x7neighbors();
-		rc.setIndicatorString(0, bigArrayToString(grandNeighborArray));
-		
-		ArrayList<Direction> possibleMoves = new ArrayList<Direction>();
-		
-		// enemies within sight range: closeEnemyRobots
-		Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
-		
-		// allies who may help us with this engagement:
-		Robot[] closeAlliedRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam());
-		
-		// possible directions that can be moved
-		for(Direction d: Direction.values())
-		{
-			if(d != Direction.OMNI && d != Direction.NONE && rc.canMove(d))
-			{
-				possibleMoves.add(d);
-			}
-		}
-		possibleMoves.add(Direction.NONE);
-		
-		for(Direction d : possibleMoves)
-		{
-			int attackableRobos = 0;
-			
-		}
-		return possibleMoves.get(0);
-	}
 
 	private static MapLocation findRallyPoint() throws GameActionException
 	{
@@ -204,7 +153,13 @@ public class Soldier
 			{
 				while(true)
 				{
-					goToLocation(rc.senseEnemyHQLocation());
+					Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
+					if(closeEnemyRobots.length == 0) {
+						goToLocation(rc.senseEnemyHQLocation());
+					}
+					else {
+						goToLocation(Util.findClosestRobot(rc, closeEnemyRobots));
+					}
 					rc.yield();
 				}
 			}
@@ -321,165 +276,6 @@ public class Soldier
 		{
 			rc.move(dir);
 		}
-	}
-
-	public static String intListToString(int[] intList)
-	{
-		String sofar = "";
-		for(int anInt : intList)
-		{
-			sofar = sofar + anInt + " ";
-		}
-		return sofar;
-	}
-	
-	private static void reallySmartCountNeighbors() throws GameActionException
-	{
-		// build ze 7x7 array of neighboring units
-		grandNeighborArray = populate7x7neighbors();
-	}
-
-	// ARRAY-BASED NEIGHBOR DETECTION
-	private static void smartCountNeighbors(Robot[] enemyRobots, MapLocation closestEnemy) throws GameActionException
-	{
-		//build a 5 by 5 array of neighboring units
-		neighborArray = populateNeighbors(new int[5][5]); // 1500
-		//get the total number of enemies and allies adjacent to each of the 8 adjacent tiles
-		int[] adj = totalAllAdjacent(neighborArray); // 2500
-		//also check your current position
-		int me = totalAdjacent(neighborArray,self);
-		//display the neighbor information to the indicator strings
-		rc.setIndicatorString(0, "adjacent: " + intListToString(adj) + " me: " + me);
-		//note: if the indicator string says 23, that means 2 enemies and 3 allies.
-		//TODO: Now act on that data. I leave this to you. 
-	}
-
-	public static int[] locToIndex(MapLocation ref, MapLocation test, int offset) // 40 bytecodes??
-	{
-		int[] index = new int[2];
-		index[0] = test.y-ref.y+offset;
-		index[1] = test.x-ref.x+offset;
-		return index;
-	}
-
-	public static int[][] initSurroundingIndices(Direction forward)
-	{
-		int[][] indices = new int[8][2];
-		int startOrdinal = forward.ordinal();
-		MapLocation myLoc = rc.getLocation();
-		for(int i=0;i<8;i++)
-		{
-			indices[i] = locToIndex(myLoc, myLoc.add(Direction.values()[(i + startOrdinal) % 8]), 0);
-		}
-		return indices;
-	}
-
-	public static String arrayToString(int[][] array)
-	{
-		String outstr = "";
-		for(int i = 0; i < 5; i++)
-		{
-			outstr = outstr + "; ";
-			for(int j = 0; j < 5; j++)
-			{
-				outstr = outstr+array[i][j] + " ";
-			}
-		}
-		return outstr;
-	}
-	
-	public static String bigArrayToString(int[][] array)
-	{
-		String outstr = "";
-		for(int i = 0; i < 7; i++)
-		{
-			outstr = outstr + "; ";
-			for(int j = 0; j < 7; j++)
-			{
-				outstr = outstr+array[i][j] + " ";
-			}
-		}
-		return outstr;
-	}
-	
-	private static int[][] populate7x7neighbors() throws GameActionException
-	{
-		int[][] array = new int[7][7];
-		MapLocation myLoc = rc.getLocation();
-		Robot[] closeRobos = rc.senseNearbyGameObjects(Robot.class, 14);
-		
-		for(Robot aRobot : closeRobos)
-		{
-			RobotInfo info = rc.senseRobotInfo(aRobot);
-			int[] index = locToIndex(myLoc, info.location, 3);
-			if(index[0] >= 0 && index[0] <= 6 && index[1] >= 0 && index[1] <= 6)
-			{
-				array[index[0]][index[1]] = info.team == rc.getTeam() ? 100 : -100;
-			}
-		}
-		return array;
-	}
-
-	public static int[][] populateNeighbors(int[][] array) throws GameActionException // 788
-	{
-		MapLocation myLoc = rc.getLocation();
-		Robot[] nearbyRobots = rc.senseNearbyGameObjects(Robot.class, 8);
-
-		for (Robot aRobot : nearbyRobots)
-		{
-			RobotInfo info = rc.senseRobotInfo(aRobot);
-			int[] index = locToIndex(myLoc, info.location, 2);
-			if(index[0] >= 0 && index[0] <= 4 && index[1] >= 0 && index[1] <= 4)
-			{
-				if(info.team == rc.getTeam())
-				{
-					array[index[0]][index[1]]=1;//1 is allied
-				}
-				else
-				{
-					array[index[0]][index[1]]=10;//10 is enemy
-				}
-			}
-		}
-		return array;
-	}
-
-	public static int totalAdjacent(int[][] neighbors, int[] index) // 270
-	{ 
-		int total = 0;
-		for(int i = 0; i < 8; i++)
-		{
-			total = total + neighbors[index[0] + surroundingIndices[i][0]][index[1] + surroundingIndices[i][1]];
-		}
-		return total;
-	}
-
-	public static int[] addPoints(int[] p1, int[] p2) // 30
-	{
-		int[] tot = new int[2];
-		tot[0] = p1[0] + p2[0];
-		tot[1] = p1[1] + p2[1];
-		return tot;
-	}
-
-	public static int[] totalAllAdjacent(int[][] neighbors) // 2454
-	{
-		//TODO compute only on open spaces (for planned movement)
-		int[] allAdjacent = new int[8];
-		for(int i=0;i<8;i++)
-		{
-			allAdjacent[i] =  totalAdjacent(neighbors, addPoints(self, surroundingIndices[i]));
-		}
-		return allAdjacent;
-	}
-
-	//heuristic: goodness or badness of a neighbor int, which includes allies and enemies
-	public static double howGood(int neighborInt){
-		double goodness = 0;
-		double numberOfAllies = neighborInt%10;
-		double numberOfEnemies = neighborInt-numberOfAllies;
-		// goodness = ?????; //what heuristic will you use?
-		return goodness;
 	}
 
 	public static int HQCommand() throws GameActionException // true for expand
