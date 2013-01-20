@@ -5,10 +5,6 @@ import battlecode.common.*;
 public class HQ {
 	private static int allInRound = -100;
 
-	private static int rallyRadius = 33;
-
-	private static int massAmount = 25;
-
 	private static RobotController rc;
 	private static double minPowerThreshold = 100; //TODO-findthisvalue
 	private static double minRoundThreshold = 100; //TODO-findthisvalue
@@ -158,6 +154,9 @@ public class HQ {
 	private static void shallWeAllIn() throws GameActionException
 	{
 		int massedRobos = 0;
+		double massedAmountNeeded = .7*(40 + (10 * gencount) - (1 * othercount));
+		int rallyRadius = 33;
+		if(massedAmountNeeded > 50) rallyRadius = 63;
 
 		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
 		for(Robot r : robos)
@@ -168,7 +167,7 @@ public class HQ {
 			}
 		}
 
-		if(massedRobos > .8*(40 + (10 * gencount) - (1 * othercount))) // if we should all in...
+		if(massedRobos > massedAmountNeeded) // if we should all in...
 		{
 			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 			allInRound = Clock.getRoundNum();
