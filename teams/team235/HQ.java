@@ -120,14 +120,15 @@ public class HQ {
 						if(rc.isActive())
 						{
 							rc.researchUpgrade(Upgrade.DEFUSION);
+							
 						}
 						rc.yield();
 					}
+					alliedRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
+					enemyRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam().opponent());
 				}
 			}
-
 			shallWeAllIn();
-			rc.setIndicatorString(0, expandPhase + "");
 			rc.yield();
 		}
 	}
@@ -170,20 +171,26 @@ public class HQ {
 			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 			return;
 		}
+
 		int massedRobos = 0;
 		double massedAmountNeeded = .5*(40 + (10 * gencount) - (1 * othercount));
+
 		if(rc.senseEnemyNukeHalfDone()) massedAmountNeeded -= 10;
 		
 		int rallyRadius = 33;
 		if(massedAmountNeeded > 50) rallyRadius = 63;
 
 		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
+		
+		int i = 0;
 		for(Robot r : robos)
 		{
+			i++;
 			if(rc.senseRobotInfo(r).type == RobotType.SOLDIER)
 			{
 				++massedRobos;
 			}
+			
 		}
 
 		if(massedRobos > massedAmountNeeded) // if we should all in...
@@ -191,6 +198,7 @@ public class HQ {
 			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 			allInRound = Clock.getRoundNum();
 		}
+
 	}
 
 	private static MapLocation findRallyPoint() throws GameActionException
@@ -198,12 +206,14 @@ public class HQ {
 
 		MapLocation closestEnemy = null;
 		closestEnemy = Util.findClosestRobot(rc, enemyRobots);
+		
+
 		if(closestEnemy != null && closestEnemy.distanceSquaredTo(rc.getLocation()) < rushDistance*.2) {
 			return closestEnemy;
 		}
 
 
-
+		
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
 		int x = (enemyLoc.x + 2 * ourLoc.x) / 3;

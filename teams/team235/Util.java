@@ -7,6 +7,7 @@ public class Util {
 	{
 		int closestDist = 1000000;
 		MapLocation closestEnemy = null;
+
 		for (int i = 0; i < enemyRobots.length; i++)
 		{
 			Robot arobot = enemyRobots[i];
