@@ -185,7 +185,6 @@ public class HQ {
 			{
 				++massedRobos;
 			}
-			
 		}
 
 		if(massedRobos > massedAmountNeeded) // if we should all in...
