@@ -15,7 +15,7 @@ public class HQ {
 	private static int optimalBuildings = 0;
 	private static int farAwayButSafeBuildings = 0;
 
-	private static int powerThreshold =500;
+	private static int powerThreshold = 500;
 
 	private static boolean expandPhase = true;
 
@@ -24,11 +24,13 @@ public class HQ {
 	private static int[] buildOrder;
 
 	private static int rushDistance;
+	
+	private static Direction defaultSpawnDir;
 
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
-		Direction defaultSpawnDir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
+		defaultSpawnDir = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
 		evaluateMap();
 		while(true) 
 		{
@@ -163,16 +165,14 @@ public class HQ {
 
 	private static void shallWeAllIn() throws GameActionException
 	{
-		if(rc.senseEnemyNukeHalfDone() && Clock.getRoundNum() < 300)
-		{
-			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
-			return;
-		}
-
 		int massedRobos = 0;
 		double massedAmountNeeded = .5*(40 + (10 * gencount) - (1 * othercount));
 
 		if(rc.senseEnemyNukeHalfDone()) massedAmountNeeded -= 10;
+		if(rc.senseEnemyNukeHalfDone() && Clock.getRoundNum() < 300)
+		{
+			massedAmountNeeded = 5;
+		}
 		
 		int rallyRadius = 33;
 		if(massedAmountNeeded > 50) rallyRadius = 63;
@@ -192,6 +192,48 @@ public class HQ {
 		{
 			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 			allInRound = Clock.getRoundNum();
+			if(rc.senseEnemyNukeHalfDone())
+			{
+				MapLocation enemyHQ = rc.senseEnemyHQLocation();
+				while(true)
+				{
+					rc.broadcast(Constants.commandChannel, Constants.commandEnemyNukeHalfDone);
+					rc.broadcast(Constants.rallyXChannel, enemyHQ.x);
+					rc.broadcast(Constants.rallyYChannel, enemyHQ.y);
+					rc.setIndicatorString(0, enemyHQ.x + " " + enemyHQ.y);
+					//rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
+					if(rc.isActive())
+					{
+						// Spawn a soldier
+						Team defaultScan = rc.senseMine(rc.getLocation().add(defaultSpawnDir));
+						if (rc.canMove(defaultSpawnDir) && (defaultScan == null || defaultScan == rc.getTeam()))
+						{
+							rc.spawn(defaultSpawnDir);
+						}
+						else
+						{
+							for(Direction d : Direction.values()) // TODO: optimize secondary direction finding
+							{
+								if(d != Direction.OMNI && d != Direction.NONE)
+								{
+									Team scan = rc.senseMine(rc.getLocation().add(d));
+									if(rc.canMove(d) && (scan == null || scan == rc.getTeam()))
+									{
+										rc.spawn(d);
+										break;
+									}
+								}
+							}
+							if(rc.isActive())
+							{
+								// if there are no valid spawn directions
+								rc.researchUpgrade(Upgrade.NUKE);
+							}
+						}
+					}
+					rc.yield();
+				}
+			}
 		}
 
 	}
@@ -206,8 +248,6 @@ public class HQ {
 		if(closestEnemy != null && closestEnemy.distanceSquaredTo(rc.getLocation()) < rushDistance*.2) {
 			return closestEnemy;
 		}
-
-
 		
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();

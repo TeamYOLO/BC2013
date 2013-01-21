@@ -39,13 +39,13 @@ public class Soldier
 						break;
 					case Constants.commandEnemyNukeHalfDone:
 						rally();
+						break;
 					case Constants.commandBuildIndividual: //TODO- implement this
 						break;
 					}
 				}
 				else
 				{
-
 					// enemy spotted
 					localscan = false;
 					MapLocation closestEnemy = findClosestRobot(enemyRobots);
@@ -176,6 +176,7 @@ public class Soldier
 	private static void rally() throws GameActionException
 	{
 		rallyPoint = findRallyPoint();
+		rc.setIndicatorString(0, rallyPoint.x + " " + rallyPoint.y);
 		// if we are fairly close to the rally point and we have the necessary soldier counts to make up a wave, gogogogogo
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < rallyRadius)
 		{
