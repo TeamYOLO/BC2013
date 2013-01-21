@@ -1,6 +1,7 @@
 package team235; // test
 
 import battlecode.common.*;
+import java.util.ArrayList;
 
 public class Soldier
 {
@@ -12,11 +13,14 @@ public class Soldier
 
 	private static RobotController rc;
 	private static MapLocation rallyPoint;
+	private static ArrayList<MapLocation> untakeableCamps = new ArrayList<MapLocation>();
+
 
 	public static void soldierCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
 		rallyPoint = findRallyPoint();
+		findUntakeableCamps();
 		while(true)
 		{
 			try
@@ -69,6 +73,43 @@ public class Soldier
 			}
 			rc.yield();
 		}
+	}
+
+	
+	private static void findUntakeableCamps() {
+		MapLocation hq = rc.senseHQLocation();
+		MapLocation enemy = rc.senseEnemyHQLocation();
+		Direction hqToEnemy = hq.directionTo(enemy);
+		
+		int camp1 = 0;
+		int camp2 = 0; // +1
+		int camp3 = 0; // -1
+		
+		for(int i = 0; i <= 4; i++) {
+			if(rc.senseEncampmentSquare(hq.add(hqToEnemy,i))) camp1++;
+			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal() + 1)%8)],i))) camp2++;
+			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal()  + 8 + 1)%8)],i))) camp3++;
+		}
+		
+		if(camp1 <= camp2 && camp1 <= camp3)
+		{
+			for(int i = 0; i <= 4; i++) {
+				untakeableCamps.add(hq.add(hqToEnemy,i));
+			}
+		}
+		else if(camp2 < camp1 && camp2 <= camp3)
+		{
+			for(int i = 0; i < 4; i++) {
+				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 1)%8)],i));
+			}
+		}
+		else if(camp3 < camp1 && camp3 < camp2)
+		{
+			for(int i = 0; i < 4; i++) {
+				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 8 + 1)%8)],i));
+			}
+		}
+			
 	}
 
 
@@ -371,8 +412,10 @@ public class Soldier
 			int dist = aLocation.distanceSquaredTo(me);
 			if (dist > furthestDist && rc.senseNearbyGameObjects(Robot.class, aLocation, 0, rc.getTeam()).length < 1)
 			{
-				furthestDist = dist;
-				result = aLocation;
+				if(untakeableCamps.size()>0 && untakeableCamps.indexOf(aLocation) == -1) {
+					furthestDist = dist;
+					result = aLocation;
+				}
 			}
 		}
 		return result;
@@ -390,8 +433,10 @@ public class Soldier
 			int dist = aLocation.distanceSquaredTo(me);
 			if (dist < closestDist && rc.senseNearbyGameObjects(Robot.class, aLocation, 0, rc.getTeam()).length < 1)
 			{
+				if(untakeableCamps.size()>0 && untakeableCamps.indexOf(aLocation) == -1) {
 				closestDist = dist;
 				closestLocation = aLocation;
+				}
 			}
 		}
 		return closestLocation;

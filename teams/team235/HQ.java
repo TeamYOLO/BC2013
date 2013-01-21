@@ -1,6 +1,7 @@
 package team235;
 
 import battlecode.common.*;
+import java.util.*;
 
 public class HQ {
 	private static int allInRound = -100;
@@ -27,6 +28,8 @@ public class HQ {
 	
 	private static Direction defaultSpawnDir;
 
+	private static ArrayList<MapLocation> untakeableCamps = new ArrayList<MapLocation>();
+	
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
@@ -163,6 +166,8 @@ public class HQ {
 		}
 	}
 
+	
+	
 	private static void shallWeAllIn() throws GameActionException
 	{
 		int massedRobos = 0;
@@ -309,6 +314,9 @@ public class HQ {
 			}
 		}
 
+		findUntakeableCamps();
+		optimalBuildings-=untakeableCamps.size();
+		
 		buildOrder = new int[optimalBuildings];
 
 		for(int i = 0; i < optimalBuildings; i++)
@@ -317,7 +325,42 @@ public class HQ {
 			rc.broadcast(Constants.buildOrderBeginChannel + i, buildOrder[i]);
 		}
 	}
-
+	private static void findUntakeableCamps() {
+		MapLocation hq = rc.senseHQLocation();
+		MapLocation enemy = rc.senseEnemyHQLocation();
+		Direction hqToEnemy = hq.directionTo(enemy);
+		
+		int camp1 = 0;
+		int camp2 = 0; // +1
+		int camp3 = 0; // -1
+		
+		for(int i = 0; i <= 4; i++) {
+			if(rc.senseEncampmentSquare(hq.add(hqToEnemy,i))) camp1++;
+			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal() + 1)%8)],i))) camp2++;
+			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal()  + 8 + 1)%8)],i))) camp3++;
+		}
+		
+		if(camp1 <= camp2 && camp1 <= camp3)
+		{
+			for(int i = 0; i <= 4; i++) {
+				untakeableCamps.add(hq.add(hqToEnemy,i));
+			}
+		}
+		else if(camp2 < camp1 && camp2 <= camp3)
+		{
+			for(int i = 0; i < 4; i++) {
+				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 1)%8)],i));
+			}
+		}
+		else if(camp3 < camp1 && camp3 < camp2)
+		{
+			for(int i = 0; i < 4; i++) {
+				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 8 + 1)%8)],i));
+			}
+		}
+			
+	}
+	
 	public static void singleExpand() throws GameActionException
 	{
 		int numCamps = rc.senseAlliedEncampmentSquares().length;
