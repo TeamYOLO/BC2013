@@ -19,7 +19,6 @@ public class HQ {
 
 	private static boolean expandPhase = true;
 
-	private static Robot[] alliedRobots;
 	private static Robot[] enemyRobots;
 
 	private static int[] buildOrder;
@@ -34,7 +33,6 @@ public class HQ {
 		while(true) 
 		{
 			rc.broadcast(Constants.attackChannel, 0);
-			alliedRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
 			enemyRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam().opponent());
 
 			if(expandOrRally())
@@ -124,7 +122,6 @@ public class HQ {
 						}
 						rc.yield();
 					}
-					alliedRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
 					enemyRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam().opponent());
 				}
 			}
@@ -182,10 +179,8 @@ public class HQ {
 
 		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
 		
-		int i = 0;
 		for(Robot r : robos)
 		{
-			i++;
 			if(rc.senseRobotInfo(r).type == RobotType.SOLDIER)
 			{
 				++massedRobos;
