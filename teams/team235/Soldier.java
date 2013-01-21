@@ -42,6 +42,16 @@ public class Soldier
 						break;
 					case Constants.commandBuildIndividual: //TODO- implement this
 						break;
+					default:
+						if(Clock.getRoundNum() < 300)
+						{
+							expand();
+						}
+						else
+						{
+							rally();
+						}
+						break;
 					}
 				}
 				else
@@ -64,7 +74,34 @@ public class Soldier
 
 	private static MapLocation findRallyPoint() throws GameActionException
 	{
-		return new MapLocation(rc.readBroadcast(Constants.rallyXChannel), rc.readBroadcast(Constants.rallyYChannel));
+		int x = rc.readBroadcast(Constants.rallyXChannel);
+		int y = rc.readBroadcast(Constants.rallyYChannel);
+		
+		if(isValidMapLocation(x,y))
+		{
+			return new MapLocation(x,y);
+		}
+		else
+		{
+			// return a default
+			MapLocation enemyLoc = rc.senseEnemyHQLocation();
+			MapLocation ourLoc = rc.senseHQLocation();
+			x = (enemyLoc.x + 2 * ourLoc.x) / 3;
+			y = (enemyLoc.y + 2 * ourLoc.y) / 3;
+			return new MapLocation(x,y);
+		}
+	}
+	
+	private static boolean isValidMapLocation(int x, int y)
+	{
+		if(x < 10 || x > rc.getMapWidth() || y < 10 || y > rc.getMapHeight())
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
 	}
 
 	private static int getNumberOfAlliedRobosAfterMe() throws GameActionException
@@ -107,31 +144,54 @@ public class Soldier
 				if(rc.senseCaptureCost() + 1.8 * getNumberOfAlliedRobosAfterMe() < rc.getTeamPower()) // if we have enough power to capture
 				{
 					int readIn=0;
-					for(int i = Constants.buildOrderBeginChannel ; i <= Constants.buildOrderEndChannel; i++) {
+					for(int i = Constants.buildOrderBeginChannel ; i <= Constants.buildOrderEndChannel; i++)
+					{
 						readIn=rc.readBroadcast(i);
-						if(readIn==Constants.buildOrderGen) {
+						if(readIn==Constants.buildOrderGen)
+						{
 							rc.broadcast(i, 0);
 							rc.captureEncampment(RobotType.GENERATOR);
 							break;
 						}
-						else if(readIn==Constants.buildOrderSup) {
+						else if(readIn==Constants.buildOrderSup)
+						{
 							rc.broadcast(i, 0);
 							rc.captureEncampment(RobotType.SUPPLIER);
 							break;
 						}
-						else if(readIn==Constants.buildOrderShield) {
+						else if(readIn==Constants.buildOrderShield)
+						{
 							rc.broadcast(i, 0);
 							rc.captureEncampment(RobotType.SHIELDS);
 							break;
 						}
-						else if(readIn==Constants.buildOrderHeal) {
+						else if(readIn==Constants.buildOrderHeal)
+						{
 							rc.broadcast(i, 0);
 							rc.captureEncampment(RobotType.MEDBAY);
 							break;
 						}
-						else if(readIn==Constants.buildOrderArt) {
+						else if(readIn==Constants.buildOrderArt)
+						{
 							rc.broadcast(i, 0);
 							rc.captureEncampment(RobotType.ARTILLERY);
+							break;
+						}
+						else if(readIn == 0)
+						{
+							// continue looping
+						}
+						else
+						{
+							// we are being scrambled
+							if((Clock.getRoundNum() - 1) % 3 == 0)
+							{
+								rc.captureEncampment(RobotType.GENERATOR);
+							}
+							else
+							{
+								rc.captureEncampment(RobotType.SUPPLIER);
+							}
 							break;
 						}
 					}
@@ -194,15 +254,76 @@ public class Soldier
 					rc.yield();
 				}
 			}
-			else
+			else if(rc.readBroadcast(Constants.attackChannel) == Constants.attackContinueRallying)
 			{
 				goToLocation(rallyPoint);
+			}
+			else
+			{
+				//being scrambled
+				if(shallWeAllInScrambled())
+				{
+					while(true)
+					{
+						Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
+						if(closeEnemyRobots.length == 0) {
+							goToLocation(rc.senseEnemyHQLocation());
+						}
+						else {
+							goToLocation(Util.findClosestRobot(rc, closeEnemyRobots));
+						}
+						rc.yield();
+					}
+				}
+				else
+				{
+					goToLocation(rallyPoint);
+				}
 			}
 		}
 		else 
 		{
 			goToLocation(rallyPoint);
 		}
+	}
+	
+	private static boolean shallWeAllInScrambled() throws GameActionException
+	{
+		int gencount = 0;
+		int soldiercount = 0;
+		int othercount = 0;
+
+		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
+		for(Robot r : robos)
+		{
+			RobotType rt = rc.senseRobotInfo(r).type;
+			if(rt == RobotType.GENERATOR) ++gencount;
+			else if(rt == RobotType.SOLDIER) ;
+			else ++othercount;
+		}
+		int massedRobos = 0;
+		double massedAmountNeeded = .5*(40 + (10 * gencount) - (1 * othercount));
+		
+		int rallyRadius = 33;
+		if(massedAmountNeeded > 50) rallyRadius = 63;
+
+		Robot[] closeRobos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
+		
+		for(Robot r : closeRobos)
+		{
+			if(rc.senseRobotInfo(r).type == RobotType.SOLDIER)
+			{
+				++massedRobos;
+			}
+		}
+
+		if(massedRobos > massedAmountNeeded) // if we should all in...
+		{
+			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
+			return true;
+		}
+		
+		return false;
 	}
 
 	private static MapLocation findClosestRobot(Robot[] enemyRobots) throws GameActionException

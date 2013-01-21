@@ -11,6 +11,7 @@ public class Constants
 	
 	public static final int attackChannel = 100;
 	public static final int attackAllIn = 1337;
+	public static final int attackContinueRallying = 42;
 	
 	public static final int commandChannel = 101;
 	public static final int commandExpand = 2;

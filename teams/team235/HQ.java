@@ -34,7 +34,7 @@ public class HQ {
 		evaluateMap();
 		while(true) 
 		{
-			rc.broadcast(Constants.attackChannel, 0);
+			rc.broadcast(Constants.attackChannel, Constants.attackContinueRallying);
 			enemyRobots = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam().opponent());
 
 			if(expandOrRally())
