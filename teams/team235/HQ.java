@@ -204,7 +204,6 @@ public class HQ {
 					rc.broadcast(Constants.commandChannel, Constants.commandEnemyNukeHalfDone);
 					rc.broadcast(Constants.rallyXChannel, enemyHQ.x);
 					rc.broadcast(Constants.rallyYChannel, enemyHQ.y);
-					rc.setIndicatorString(0, enemyHQ.x + " " + enemyHQ.y);
 					//rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 					if(rc.isActive())
 					{
@@ -316,6 +315,7 @@ public class HQ {
 
 		findUntakeableCamps();
 		optimalBuildings-=untakeableCamps.size();
+		rc.setIndicatorString(0, untakeableCamps.size() + " lol");
 		
 		buildOrder = new int[optimalBuildings];
 

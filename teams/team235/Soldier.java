@@ -75,22 +75,22 @@ public class Soldier
 		}
 	}
 
-	
+
 	private static void findUntakeableCamps() {
 		MapLocation hq = rc.senseHQLocation();
 		MapLocation enemy = rc.senseEnemyHQLocation();
 		Direction hqToEnemy = hq.directionTo(enemy);
-		
+
 		int camp1 = 0;
 		int camp2 = 0; // +1
 		int camp3 = 0; // -1
-		
+
 		for(int i = 0; i <= 4; i++) {
 			if(rc.senseEncampmentSquare(hq.add(hqToEnemy,i))) camp1++;
 			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal() + 1)%8)],i))) camp2++;
 			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal()  + 8 + 1)%8)],i))) camp3++;
 		}
-		
+
 		if(camp1 <= camp2 && camp1 <= camp3)
 		{
 			for(int i = 0; i <= 4; i++) {
@@ -109,7 +109,7 @@ public class Soldier
 				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 8 + 1)%8)],i));
 			}
 		}
-			
+
 	}
 
 
@@ -117,7 +117,7 @@ public class Soldier
 	{
 		int x = rc.readBroadcast(Constants.rallyXChannel);
 		int y = rc.readBroadcast(Constants.rallyYChannel);
-		
+
 		if(isValidMapLocation(x,y))
 		{
 			return new MapLocation(x,y);
@@ -132,7 +132,7 @@ public class Soldier
 			return new MapLocation(x,y);
 		}
 	}
-	
+
 	private static boolean isValidMapLocation(int x, int y)
 	{
 		if(x < 10 || x > rc.getMapWidth() || y < 10 || y > rc.getMapHeight())
@@ -307,10 +307,12 @@ public class Soldier
 					while(true)
 					{
 						Robot[] closeEnemyRobots = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
-						if(closeEnemyRobots.length == 0) {
+						if(closeEnemyRobots.length == 0)
+						{
 							goToLocation(rc.senseEnemyHQLocation());
 						}
-						else {
+						else
+						{
 							goToLocation(Util.findClosestRobot(rc, closeEnemyRobots));
 						}
 						rc.yield();
@@ -327,29 +329,38 @@ public class Soldier
 			goToLocation(rallyPoint);
 		}
 	}
-	
+
 	private static boolean shallWeAllInScrambled() throws GameActionException
 	{
 		int gencount = 0;
 		int soldiercount = 0;
 		int othercount = 0;
+		double massedAmountNeeded = 0;
 
 		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, new MapLocation(0,0), 1000000, rc.getTeam());
-		for(Robot r : robos)
+		if(robos.length < 50)
 		{
-			RobotType rt = rc.senseRobotInfo(r).type;
-			if(rt == RobotType.GENERATOR) ++gencount;
-			else if(rt == RobotType.SOLDIER) ;
-			else ++othercount;
+			for(Robot r : robos)
+			{
+				RobotType rt = rc.senseRobotInfo(r).type;
+				if(rt == RobotType.GENERATOR) ++gencount;
+				else if(rt == RobotType.SOLDIER) ++soldiercount;
+				else ++othercount;
+			}
+		}
+		else
+		{
+			gencount = 1;
+			othercount = 6;
 		}
 		int massedRobos = 0;
-		double massedAmountNeeded = .5*(40 + (10 * gencount) - (1 * othercount));
-		
+		massedAmountNeeded = .5*(40 + (10 * gencount) - (1 * othercount));
+
 		int rallyRadius = 33;
 		if(massedAmountNeeded > 50) rallyRadius = 63;
 
 		Robot[] closeRobos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
-		
+
 		for(Robot r : closeRobos)
 		{
 			if(rc.senseRobotInfo(r).type == RobotType.SOLDIER)
@@ -363,7 +374,7 @@ public class Soldier
 			rc.broadcast(Constants.attackChannel, Constants.attackAllIn);
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -434,8 +445,8 @@ public class Soldier
 			if (dist < closestDist && rc.senseNearbyGameObjects(Robot.class, aLocation, 0, rc.getTeam()).length < 1)
 			{
 				if(untakeableCamps.size()>0 && untakeableCamps.indexOf(aLocation) == -1) {
-				closestDist = dist;
-				closestLocation = aLocation;
+					closestDist = dist;
+					closestLocation = aLocation;
 				}
 			}
 		}
@@ -451,7 +462,8 @@ public class Soldier
 			Direction dir = meee.directionTo(whereToGo);
 			int[] directionOffsets = {0, 1, -1, 2, -2};
 			Direction lookingAtCurrently = null;
-			for (int d : directionOffsets){
+			for (int d : directionOffsets)
+			{
 				lookingAtCurrently = Direction.values()[(dir.ordinal()+d+8)%8];
 				if(rc.canMove(lookingAtCurrently))
 				{

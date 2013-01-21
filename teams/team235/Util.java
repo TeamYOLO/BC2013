@@ -13,7 +13,8 @@ public class Util {
 			Robot arobot = enemyRobots[i];
 			RobotInfo arobotInfo = rc.senseRobotInfo(arobot);
 			int dist = arobotInfo.location.distanceSquaredTo(rc.getLocation());
-			if (dist<closestDist){
+			if (dist<closestDist)
+			{
 				closestDist = dist;
 				closestEnemy = arobotInfo.location;
 			}
