@@ -29,6 +29,7 @@ public class HQ
 	
 	private static Direction defaultSpawnDir;
 
+	static int numBadCamps = 0;
 	private static ArrayList<MapLocation> untakeableCamps = new ArrayList<MapLocation>();
 	
 	public static void hqCode(RobotController myRC) throws GameActionException
@@ -315,8 +316,7 @@ public class HQ
 		}
 
 		findUntakeableCamps();
-		optimalBuildings-=untakeableCamps.size();
-		rc.setIndicatorString(0, untakeableCamps.size() + " lol");
+		optimalBuildings-=numBadCamps;
 		
 		buildOrder = new int[optimalBuildings];
 
@@ -343,18 +343,21 @@ public class HQ
 		
 		if(camp1 <= camp2 && camp1 <= camp3)
 		{
+			numBadCamps = camp1;
 			for(int i = 0; i <= 4; i++) {
 				untakeableCamps.add(hq.add(hqToEnemy,i));
 			}
 		}
 		else if(camp2 < camp1 && camp2 <= camp3)
 		{
+			numBadCamps = camp2;
 			for(int i = 0; i < 4; i++) {
 				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 1)%8)],i));
 			}
 		}
 		else if(camp3 < camp1 && camp3 < camp2)
 		{
+			numBadCamps = camp3;
 			for(int i = 0; i < 4; i++) {
 				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 8 + 1)%8)],i));
 			}
