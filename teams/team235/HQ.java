@@ -3,7 +3,8 @@ package team235;
 import battlecode.common.*;
 import java.util.*;
 
-public class HQ {
+public class HQ
+{
 	private static int allInRound = -100;
 
 	private static RobotController rc;

@@ -4,7 +4,7 @@ public class Constants
 {
 	private Constants() { }  // Prevents instantiation
 
-	public static final int campChannel   = 30126;
+	public static final int campChannel = 30126;
 	public static final int campGen = 1;
 	public static final int campGenInProduction = 2;
 	public static final int campSupplier = 0;
@@ -19,11 +19,11 @@ public class Constants
 	public static final int commandBuildIndividual = 4;
 	public static final int commandEnemyNukeHalfDone = 5;
 	
-	public static final int singleExpandXChannel = 35102;
-	public static final int singleExpandYChannel = 39103;
+	public static final int singleExpandXChannel = 32102;
+	public static final int singleExpandYChannel = 34103;
 	
-	public static final int rallyXChannel = 43104;
-	public static final int rallyYChannel = 43105;
+	public static final int rallyXChannel = 32104;
+	public static final int rallyYChannel = 31105;
 	
 	public static final int buildOrderBeginChannel = 30111;
 	public static final int buildOrderEndChannel = 30131;

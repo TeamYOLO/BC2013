@@ -21,6 +21,10 @@ public class RobotPlayer
 			{
 				HQ.hqCode(rc);
 			}
+			else if(t == RobotType.GENERATOR || t == RobotType.SUPPLIER)
+			{
+				Supplier.supplierCode(rc);
+			}
 			else
 			{
 				while(true)
