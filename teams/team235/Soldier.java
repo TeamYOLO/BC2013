@@ -137,7 +137,15 @@ public class Soldier
 	{
 		if(x < 10 || x > rc.getMapWidth() || y < 10 || y > rc.getMapHeight())
 		{
-			return false;
+			MapLocation m = rc.senseEnemyHQLocation();
+			if(x != m.x || y != m.y)
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
 		}
 		else
 		{
@@ -443,7 +451,7 @@ public class Soldier
 			if(locArray.length > 0) break;
 		}
 		if(locArray.length == 0) return null;
-		
+
 		int closestDist = 1000000;
 		MapLocation me = rc.getLocation();
 		MapLocation closestLocation = null;
