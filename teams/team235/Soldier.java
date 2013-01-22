@@ -174,15 +174,17 @@ public class Soldier
 	private static void expand() throws GameActionException
 	{
 		//rallyPoint = findClosestLocation(rc.senseAllEncampmentSquares());
-		if(!localscan) {
-			rallyPoint = findClosestEmptyCamp();
-			if(rallyPoint == null) rallyPoint = findRallyPoint();
+		if(!localscan)
+		{
+			rallyPoint = findClosestEmptyCamp(100);
+			//if(rallyPoint == null) rallyPoint = findRallyPoint();
 		}
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
 		{
-			if(!localscan) {
+			if(!localscan)
+			{
 				rallyPoint = findFurthestLocalCamp();
-				if(rallyPoint == null) rallyPoint = findRallyPoint();
+				//if(rallyPoint == null) rallyPoint = findRallyPoint();
 				localscan=true;
 			}
 		}
@@ -271,7 +273,7 @@ public class Soldier
 		}
 		else if(rc.senseNearbyGameObjects(Robot.class, rallyPoint, 0, rc.getTeam()).length > 0) // if there is an allied robot on our rally point
 		{
-			rallyPoint = findClosestEmptyCamp();
+			rallyPoint = findClosestEmptyCamp(100);
 			if(rallyPoint == null)
 			{
 				rallyPoint = findRallyPoint();
@@ -442,19 +444,16 @@ public class Soldier
 		return result;
 
 	}
-	private static MapLocation findClosestEmptyCamp() throws GameActionException
+	private static MapLocation findClosestEmptyCamp(int scanRadius) throws GameActionException
 	{
-		MapLocation[] locArray = null;
-		for(int i = 50; i < 1000; i +=50)
-		{
-			locArray = rc.senseEncampmentSquares(rc.getLocation(), i, Team.NEUTRAL);
-			if(locArray.length > 0) break;
-		}
-		if(locArray.length == 0) return null;
 
+		MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), scanRadius, Team.NEUTRAL);
+
+		//MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
 		int closestDist = 1000000;
 		MapLocation me = rc.getLocation();
 		MapLocation closestLocation = null;
+
 		for (int i = 0; i < locArray.length; i++)
 		{
 			MapLocation aLocation = locArray[i];
@@ -467,6 +466,13 @@ public class Soldier
 				}
 			}
 		}
+		
+		if(closestLocation == null)
+		{
+			closestLocation = findClosestEmptyCamp(scanRadius * 10);
+		}
+		
+		
 		return closestLocation;
 	}
 
@@ -561,7 +567,7 @@ public class Soldier
 			}
 			else if(rc.senseNearbyGameObjects(Robot.class, expandLocation, 0, rc.getTeam()).length > 0) // if there is an allied robot on our rally point
 			{
-				expandLocation = findClosestEmptyCamp();
+				expandLocation = findClosestEmptyCamp(100);
 				if(expandLocation == null)
 				{
 					expandLocation = findRallyPoint();
