@@ -69,10 +69,9 @@ public class Supplier
 			}
 
 			// jam phase TURN THE HEAT UP
-
 			while(true)
 			{
-				if(enemyChannels.size()< 100)
+				if(enemyChannels.size() < 20)
 				{
 					for(int i : enemyChannels)
 					{
