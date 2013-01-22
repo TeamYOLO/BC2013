@@ -1,11 +1,14 @@
 package team235;
 
 import battlecode.common.*;
+
 import java.util.*;
 
 public class HQ
 {
 	private static int allInRound = -100;
+	
+	private static boolean rushedWeAreBeing = false;
 
 	private static RobotController rc;
 	private static double minPowerThreshold = 100; //TODO-findthisvalue
@@ -400,7 +403,22 @@ public class HQ
 		// rush distance
 		//double rushDistance = rc.senseHQLocation().distanceSquaredTo(rc.senseEnemyHQLocation());
 		// number of encampments
-
+		if(rushedWeAreBeing)
+		{
+			return false;
+		}
+		
+		if(Clock.getRoundNum() < 201)
+		{
+			if(enemyRobots.length * 30 > Clock.getRoundNum())
+			{
+				rc.setIndicatorString(0, "AW MA GAWD");
+				rushedWeAreBeing = true;
+				return false;
+			}
+		}
+		
+		rc.setIndicatorString(0, "WE ARE OKAY GUYSSS");
 		if(!expandPhase)
 		{ 
 			singleExpand();
