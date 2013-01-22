@@ -26,6 +26,7 @@ public class Supplier
 		{
 			int channelMin = 5000 * order;
 			int channelMax = channelMin + 5000;
+			String s = "";
 
 			if(channelMin == 30000)
 			{
@@ -37,6 +38,7 @@ public class Supplier
 							&& i != Constants.rallyYChannel && i != Constants.singleExpandXChannel && i != Constants.singleExpandYChannel)
 					{
 						enemyChannels.add(i);
+						s += (i + " " + rc.readBroadcast(i) + ";");
 					}
 					if(i % 150 == 0) rc.yield();
 				}
@@ -53,6 +55,13 @@ public class Supplier
 					if(i % 150 == 0) rc.yield();
 				}
 			}
+			
+			
+			/*for(int i: enemyChannels)
+			{
+				s += i + " ";
+			}*/
+			rc.setIndicatorString(0,s);
 
 			while(Clock.getRoundNum() < 309)
 			{

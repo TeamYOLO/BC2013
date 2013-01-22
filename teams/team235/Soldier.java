@@ -168,11 +168,13 @@ public class Soldier
 		//rallyPoint = findClosestLocation(rc.senseAllEncampmentSquares());
 		if(!localscan) {
 			rallyPoint = findClosestEmptyCamp();
+			if(rallyPoint == null) rallyPoint = findRallyPoint();
 		}
 		if(rc.getLocation().distanceSquaredTo(rallyPoint) < 1) // if we are at the location of the rally point
 		{
 			if(!localscan) {
 				rallyPoint = findFurthestLocalCamp();
+				if(rallyPoint == null) rallyPoint = findRallyPoint();
 				localscan=true;
 			}
 		}
@@ -434,7 +436,14 @@ public class Soldier
 	}
 	private static MapLocation findClosestEmptyCamp() throws GameActionException
 	{
-		MapLocation[] locArray = rc.senseEncampmentSquares(rc.getLocation(), 1000000, Team.NEUTRAL);
+		MapLocation[] locArray = null;
+		for(int i = 50; i < 1000; i +=50)
+		{
+			locArray = rc.senseEncampmentSquares(rc.getLocation(), i, Team.NEUTRAL);
+			if(locArray.length > 0) break;
+		}
+		if(locArray.length == 0) return null;
+		
 		int closestDist = 1000000;
 		MapLocation me = rc.getLocation();
 		MapLocation closestLocation = null;

@@ -26,12 +26,12 @@ public class HQ
 	private static int[] buildOrder;
 
 	private static int rushDistance;
-	
+
 	private static Direction defaultSpawnDir;
 
 	static int numBadCamps = 0;
 	private static ArrayList<MapLocation> untakeableCamps = new ArrayList<MapLocation>();
-	
+
 	public static void hqCode(RobotController myRC) throws GameActionException
 	{
 		rc = myRC;
@@ -46,7 +46,7 @@ public class HQ
 			{
 				rc.broadcast(Constants.commandChannel, Constants.commandExpand);
 				broadcastUpdatedBuildOrder();
-				
+
 				MapLocation rally = findRallyPoint();
 				rc.broadcast(Constants.rallyXChannel, rally.x);
 				rc.broadcast(Constants.rallyYChannel, rally.y);
@@ -125,7 +125,7 @@ public class HQ
 						if(rc.isActive())
 						{
 							rc.researchUpgrade(Upgrade.DEFUSION);
-							
+
 						}
 						rc.yield();
 					}
@@ -156,7 +156,7 @@ public class HQ
 			for(int i = 0; i < buildOrder.length; i++)
 			{
 				buildOrder[i] = rc.readBroadcast(Constants.buildOrderBeginChannel + i);
-				
+
 			}
 		}
 		else
@@ -168,8 +168,8 @@ public class HQ
 		}
 	}
 
-	
-	
+
+
 	private static void shallWeAllIn() throws GameActionException
 	{
 		int massedRobos = 0;
@@ -180,12 +180,12 @@ public class HQ
 		{
 			massedAmountNeeded = 5;
 		}
-		
+
 		int rallyRadius = 33;
 		if(massedAmountNeeded > 50) rallyRadius = 63;
 
 		Robot[] robos = rc.senseNearbyGameObjects(Robot.class, findRallyPoint(), rallyRadius, rc.getTeam());
-		
+
 		for(Robot r : robos)
 		{
 			if(rc.senseRobotInfo(r).type == RobotType.SOLDIER)
@@ -248,12 +248,12 @@ public class HQ
 
 		MapLocation closestEnemy = null;
 		closestEnemy = Util.findClosestRobot(rc, enemyRobots);
-		
+
 
 		if(closestEnemy != null && closestEnemy.distanceSquaredTo(rc.getLocation()) < rushDistance*.2) {
 			return closestEnemy;
 		}
-		
+
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
 		MapLocation ourLoc = rc.senseHQLocation();
 		int x = (enemyLoc.x + 2 * ourLoc.x) / 3;
@@ -304,20 +304,30 @@ public class HQ
 		MapLocation them = rc.senseEnemyHQLocation();
 		rushDistance = them.distanceSquaredTo(me);
 
-		for (MapLocation loc : neutralCamps) {
-			double toUs=loc.distanceSquaredTo(me);
-			double toThem = loc.distanceSquaredTo(them);			
-			if(toUs/toThem < .81)
-			{
-				if(rushDistance > toUs)
-					optimalBuildings++;
-				else farAwayButSafeBuildings++;
+		if(neutralCamps.length < 80)
+		{
+			for (MapLocation loc : neutralCamps) {
+				double toUs=loc.distanceSquaredTo(me);
+				double toThem = loc.distanceSquaredTo(them);			
+				if(toUs/toThem < .81)
+				{
+					if(rushDistance > toUs)
+						optimalBuildings++;
+					else farAwayButSafeBuildings++;
+				}
 			}
+		}
+		else
+		{
+			optimalBuildings = 20;
+			// TODO: figure out what to do with far away but safe
 		}
 
 		findUntakeableCamps();
 		optimalBuildings-=numBadCamps;
-		
+
+		if(optimalBuildings > 20) optimalBuildings = 20;
+
 		buildOrder = new int[optimalBuildings];
 
 		for(int i = 0; i < optimalBuildings; i++)
@@ -330,17 +340,17 @@ public class HQ
 		MapLocation hq = rc.senseHQLocation();
 		MapLocation enemy = rc.senseEnemyHQLocation();
 		Direction hqToEnemy = hq.directionTo(enemy);
-		
+
 		int camp1 = 0;
 		int camp2 = 0; // +1
 		int camp3 = 0; // -1
-		
+
 		for(int i = 0; i <= 4; i++) {
 			if(rc.senseEncampmentSquare(hq.add(hqToEnemy,i))) camp1++;
 			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal() + 1)%8)],i))) camp2++;
 			if(rc.senseEncampmentSquare(hq.add(Direction.values()[((hqToEnemy.ordinal()  + 8 + 1)%8)],i))) camp3++;
 		}
-		
+
 		if(camp1 <= camp2 && camp1 <= camp3)
 		{
 			numBadCamps = camp1;
@@ -362,9 +372,9 @@ public class HQ
 				untakeableCamps.add(hq.add(Direction.values()[((hqToEnemy.ordinal() + 8 + 1)%8)],i));
 			}
 		}
-			
+
 	}
-	
+
 	public static void singleExpand() throws GameActionException
 	{
 		int numCamps = rc.senseAlliedEncampmentSquares().length;
