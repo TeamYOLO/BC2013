@@ -504,14 +504,22 @@ public class Soldier
 		Team miney = rc.senseMine(ahead);
 		if(miney == Team.NEUTRAL)
 		{
-			if(rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent()).length == 0)
+			Robot[] enemyRobos = rc.senseNearbyGameObjects(Robot.class, rc.getLocation(), 14, rc.getTeam().opponent());
+			if(enemyRobos.length == 0)
 			{
 				rc.defuseMine(ahead);
 				retval = true;
 			}
 			else
 			{
-				retval = false;
+				// if the enemy robos spotted are buildings, press on
+				for(Robot r: enemyRobos)
+				{
+					if(rc.senseRobotInfo(r).type == RobotType.SOLDIER) return false;
+				}
+				// if we've made it to this point, the only spotted enemy robots are not soldiers, so go ahead and defuse
+				rc.defuseMine(ahead);
+				retval = true;
 			}
 		}
 		else if(miney == rc.getTeam().opponent())
