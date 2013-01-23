@@ -7,7 +7,6 @@ import java.util.*;
 public class HQ
 {
 	private static int allInRound = -100;
-	private static int rushRoundMax = 151;
 	
 	private static boolean rushedWeAreBeing = false;
 
@@ -409,7 +408,7 @@ public class HQ
 			return false;
 		}
 		
-		if(Clock.getRoundNum() < rushRoundMax)
+		if(expandPhase)
 		{
 			if(enemyRobots.length * 30 > Clock.getRoundNum())
 			{
